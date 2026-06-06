@@ -1,5 +1,23 @@
-<!doctype html>
-<body>
-    <h1>About us</h1>
-</body>
-</html>
+{% extends 'base1.html' %}
+
+{% block title %}About{% endblock title %}
+
+{% block body %}
+<section class="page-shell hero">
+  <div class="hero-copy">
+    <h1>About Xamlysis</h1>
+    <p>
+      Xamlysis helps teachers organize online examinations and helps students assess their preparation through timed tests, score tracking, and answer review.
+    </p>
+    <div class="hero-actions">
+      <a class="btn btn-primary btn-lg" href="/temp_sign_up">Get Started</a>
+      <a class="btn btn-outline-primary btn-lg" href="/login">Login</a>
+    </div>
+  </div>
+  <div class="action-card">
+    <h2 class="section-title">What It Supports</h2>
+    <p>Exam scheduling, question setup, class and course selection, registrations, score summaries, and answer review.</p>
+    <p class="mb-0">The goal is simple: make online assessment easier to run and easier to learn from.</p>
+  </div>
+</section>
+{% endblock body %}

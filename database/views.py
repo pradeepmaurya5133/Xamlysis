@@ -9,7 +9,10 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth import login as auth_login, authenticate , logout as auth_logout
 import datetime
-import mysql.connector
+try:
+    import mysql.connector
+except ImportError:
+    mysql = None
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 #from mysite.core.forms import SignUpForm
 from .forms import *
@@ -384,18 +387,6 @@ def teach_home(request):
     current_user=request.user
     edobj=exam_details.objects.filter(email_id_id=current_user.email_id).values('exam_title' , 'exam_code', 'date' , 'max_marks' , 'duration' , 'start_time' ,'class_stu' ,)
     edobj=list(edobj)
-    #print(edobj)
-    print(edobj[0]['duration'] , 'hello')
-    time=str(edobj[0]['duration'])
-    print(time)
-    a=time.find(":")+1
-    b=time.find(":", a)
-    hour=int(time[0:a-1])
-    min=int(time[a:b])
-    sec=int(time[b+1:])
-    dur=hour*60*60+min*60+sec
-    print(hour , min  ,sec)
-    print(a , b , "hi")
     #edobj=edobj[:]["exam_title"]
     #no_q=exam_details.objects.filter(exam_code=ec).values('no_of_ques')[0]["no_of_ques"]
 

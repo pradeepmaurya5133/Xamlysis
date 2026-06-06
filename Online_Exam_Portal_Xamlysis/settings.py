@@ -22,7 +22,7 @@ SECRET_KEY = 'django-insecure-3yw+ybibo7m^w)172rl1^ek+f%@p!l$%dt30f&dsn!y_fmcs53
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 # Application definition
@@ -74,24 +74,24 @@ WSGI_APPLICATION = 'Online_Exam_Portal_Xamlysis.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-"""
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if os.environ.get('XAMLYSIS_DB') == 'mysql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'xamlysis_datab',
+            'USER': 'root',
+            'PASSWORD': 'Asdf@123',
+            'HOST': 'localhost',
+            'PORT': '3306',
+        }
     }
-}
-"""
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'xamlysis_datab',
-        'USER': 'root',
-        'PASSWORD': 'Asdf@123',
-        'HOST': 'localhost',
-        'PORT': '3306',
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
 
 
 # Password validation
