@@ -4,9 +4,9 @@ An online examination portal built with Django. Teachers schedule exams, author
 multiple-choice question papers and review results; students register for exams,
 attempt them in the browser and get scored instantly.
 
-> Originally written against **Django 3.2 / Python 3.9** with MySQL. It also runs
-> on SQLite with no configuration, which is the default and the quickest way to
-> get started.
+> Originally written against **Django 3.2 / Python 3.9** with MySQL. It runs on
+> SQLite with no configuration, which is the default and the quickest way to get
+> started, and on Postgres via `DATABASE_URL` when deployed.
 
 ---
 
@@ -28,19 +28,24 @@ attempt them in the browser and get scored instantly.
 **Shared**
 - Custom user model keyed on email address
 - Django admin at `/admin/` ("Xamlysis Admin Portal")
+- A seeded catalogue of up to **32 courses, 39 exams and 780 questions** across
+  computing, design, commerce, management and engineering
 - Chat-bot and WebSocket echo scaffolding (Django Channels — currently disabled)
 
 ---
 
 ## Tech stack
 
-| Layer     | Choice                                              |
-|-----------|-----------------------------------------------------|
-| Framework | Django (3.2 originally; verified on 5.2)            |
-| Database  | SQLite by default, MySQL optional                   |
-| Templates | Django templates, flat under `template/`            |
-| Frontend  | Hand-written CSS in `static/`                       |
-| Extras    | Django REST Framework, Pillow, Channels (scaffold)  |
+| Layer      | Choice                                                     |
+|------------|------------------------------------------------------------|
+| Framework  | Django (3.2 originally; verified on 5.2)                   |
+| Database   | SQLite locally, Postgres in deployment, MySQL optional     |
+| Templates  | Django templates, flat under `template/`                   |
+| Frontend   | Hand-written CSS in `static/`                              |
+| Static     | WhiteNoise, served by the app itself                       |
+| Server     | `runserver` locally, gunicorn in deployment                |
+| Deployment | Render (`render.yaml` blueprint + `build.sh`)              |
+| Extras     | Django REST Framework, Channels (scaffold, disabled)       |
 
 ---
 
@@ -64,10 +69,11 @@ run.bat                :: cmd.exe
 
 Then open <http://127.0.0.1:8000/>.
 
-> **Note:** `manage.py runserver` on its own will not work in PowerShell. PowerShell
-> does not execute programs from the current directory, and `.py` files are not
-> associated with the virtualenv's interpreter. Always invoke Python explicitly —
-> `python manage.py runserver` with the venv active, or use `run.ps1` above.
+> **Note:** `manage.py` re-executes itself under `.venv` when the interpreter
+> running it has no Django installed, so `python manage.py runserver` works
+> without activating the virtualenv first. It prints which interpreter it
+> switched to. Set `XAMLYSIS_NO_REEXEC=1` to disable that and get the plain
+> Django import error instead.
 
 ### Manual setup
 
@@ -79,13 +85,13 @@ python -m venv .venv
 # source .venv/bin/activate     # macOS / Linux
 
 # 2. Install dependencies
-pip install Django djangorestframework Pillow
+pip install -r requirements.txt
 
-# 3. Apply migrations
-python manage.py migrate
+# 3. Migrate, seed the roles and the course catalogue, create the admin
+python manage.py bootstrap_deploy --admin-password "ChooseSomethingStrong"
 
-# 4. Seed the two roles the app assumes exist (see "Required seed data")
-python manage.py shell -c "from database.models import role_id; role_id.objects.get_or_create(role_id=1, defaults={'role_name':'TEACHER'}); role_id.objects.get_or_create(role_id=2, defaults={'role_name':'STUDENT'})"
+# 4. Create an exam with a 20 question paper for every course
+python manage.py seed_exams
 
 # 5. Run it
 python manage.py runserver
@@ -95,10 +101,12 @@ Open <http://127.0.0.1:8000/>.
 
 ### Python version note
 
-The project originally pinned Python 3.9 and Django 3.2.6 via a `Pipfile`,
-which was removed because it broke Vercel builds. Django 3.2 does **not**
-build on Python 3.12+. If you are on a newer interpreter, install a current
-Django instead of the pinned versions:
+The project originally pinned Python 3.9 and Django 3.2.6 via a `Pipfile`. That
+file has been removed: it declared an obsolete dependency set that cannot build
+on a current interpreter, and its presence misled the deployment build into
+using it instead of `requirements.txt`. Django 3.2 does **not** build on Python
+3.12+. If you are on a newer interpreter, install a current Django instead of
+the original pins:
 
 | Your Python | Install                                  |
 |-------------|------------------------------------------|
@@ -112,12 +120,23 @@ The codebase runs unmodified on Django 5.2 — this README was verified against
 
 The `User` model has a non-nullable `role_id` foreign key defaulting to `2`.
 If the `role_id` table is empty, sign-up and most authenticated pages fail.
-Seed it before creating any user (step 4 above):
 
 | `role_id` | `role_name` |
 |-----------|-------------|
 | 1         | TEACHER     |
 | 2         | STUDENT     |
+
+`bootstrap_deploy` seeds both rows, loads the course catalogue and creates or
+resets the admin account, all idempotently:
+
+```bash
+python manage.py bootstrap_deploy --admin-password "ChooseSomethingStrong"
+python manage.py bootstrap_deploy --skip-admin      # migrate and seed only
+```
+
+The password can come from `DJANGO_ADMIN_PASSWORD` instead of the flag. The
+command refuses to run without one unless `--skip-admin` is given, so it never
+invents a credential.
 
 ### Demo dataset
 
@@ -129,17 +148,18 @@ python manage.py seed_demo           # add what is missing, keep existing rows
 python manage.py seed_demo --reset   # wipe the demo rows first, then reseed
 ```
 
-It creates **6 courses, 7 exam papers, 35 questions, 12 registrations and 7 results**:
+It creates **6 courses, 7 exam papers, 12 registrations and 7 results**. Each
+paper starts with 5 questions; `topup_exams` raises every one to 20:
 
-| Exam         | Course           | When          | Marks | Questions |
-|--------------|------------------|---------------|-------|-----------|
-| `PHY-MID-01` | Physics          | 21 days ago   | 100   | 5         |
-| `MAT-MID-01` | Mathematics      | 14 days ago   | 100   | 5         |
-| `ENG-UT-01`  | English          | 7 days ago    | 50    | 5         |
-| `PHY-UT-02`  | Physics          | today         | 50    | 5         |
-| `CHE-UT-01`  | Chemistry        | in 5 days     | 50    | 5         |
-| `BIO-FIN-01` | Biology          | in 12 days    | 100   | 5         |
-| `CSC-QZ-01`  | Computer Science | in 20 days    | 50    | 5         |
+| Exam         | Course           | When          | Marks | Questions     |
+|--------------|------------------|---------------|-------|---------------|
+| `PHY-MID-01` | Physics          | 21 days ago   | 100   | 5 -> 20       |
+| `MAT-MID-01` | Mathematics      | 14 days ago   | 100   | 5 -> 20       |
+| `ENG-UT-01`  | English          | 7 days ago    | 50    | 5 -> 20       |
+| `PHY-UT-02`  | Physics          | today         | 50    | 5 -> 20       |
+| `CHE-UT-01`  | Chemistry        | in 5 days     | 50    | 5 -> 20       |
+| `BIO-FIN-01` | Biology          | in 12 days    | 100   | 5 -> 20       |
+| `CSC-QZ-01`  | Computer Science | in 20 days    | 50    | 5 -> 20       |
 
 Dates are relative to the day you run it, so there are always past, present and
 future exams to look at. Accounts (all with password `Xamlysis@123`):
@@ -155,31 +175,155 @@ The command is idempotent — running it twice changes nothing. Edit the `COURSE
 `EXAMS`, `PAPERS` and `RESULTS` tables at the top of
 `database/management/commands/seed_demo.py` to change what it loads.
 
+### Course catalogue and exam papers
+
+Three commands build the academic content. All are idempotent, so re-running
+them adds only what is missing.
+
+```bash
+python manage.py seed_courses          # 26 professional courses (32 with seed_demo)
+python manage.py seed_courses --list   # print the catalogue without writing
+python manage.py seed_exams            # one 20 question exam per course
+python manage.py seed_exams --enrol    # also avail students of their class's courses
+python manage.py seed_exams --reset    # delete those exams and rebuild
+python manage.py topup_exams           # raise the seed_demo papers to 20 questions
+python manage.py topup_exams --dry-run # report what would change
+```
+
+What you end up with depends on which commands you run:
+
+| Commands run                              | Courses | Exams | Questions |
+|-------------------------------------------|---------|-------|-----------|
+| `seed_courses` + `seed_exams`             | 26      | 26    | 520       |
+| `seed_demo` as well, plus `topup_exams`   | 32      | 39    | 780       |
+
+`seed_courses` loads the 26 professional courses; the six school subjects
+(Physics, Mathematics, Chemistry, Biology, Computer Science, English) come from
+`seed_demo`, along with the seven exams that `topup_exams` fills out. The full
+catalogue splits 18 courses in class 11 and 14 in class 12.
+
+Questions live in two banks, separate from the commands that load them:
+
+| File                                          | Holds                                     |
+|-----------------------------------------------|-------------------------------------------|
+| `database/management/commands/_exam_bank.py`  | 20 questions for each of the 32 courses   |
+| `database/management/commands/_topup_bank.py` | 15 extra for each of the 7 `seed_demo` exams |
+
+Each bank entry is `(text, option1, option2, option3, option4, correct_option)`
+with a 1-based correct option. The banks mostly list the correct option first,
+which on its own would let a student pass by always picking option 1. Both
+commands therefore rotate the options as they write, so within every paper the
+answer falls on option 1, 2, 3 and 4 in equal measure. Rotation is derived from
+the question number, so a re-run reproduces the same paper rather than
+reshuffling it. Across all 780 questions the key sits at exactly 25% per
+position.
+
+`topup_exams` keeps each exam's existing `max_marks` rather than raising it, so
+results already recorded against a paper stay valid: a 100 mark paper becomes
+20 questions worth 5, and a 50 mark paper becomes ten worth 3 and ten worth 2.
+It refuses to run if any answers have been recorded against those exams, since
+re-marking a paper someone has already sat would change their score.
+
+**Visibility.** A student sees an exam only when the exam's class matches the
+class they are in *and* they have availed the course. `seed_exams --enrol` wires
+that up for existing students, and deliberately does not add a second class row
+— see Known issues.
+
 ### Creating an admin user
 
-Because `USERNAME_FIELD` is `email_id`, `createsuperuser` prompts for an email:
+`bootstrap_deploy` is the quickest route; it sets `is_staff`, `is_superuser` and
+the TEACHER role, so the account works in the admin and on the teacher pages:
+
+```bash
+python manage.py bootstrap_deploy --admin-password "ChooseSomethingStrong"
+```
+
+It defaults to `admin@xamlysis.test`; pass `--admin-email` for another address.
+Or use Django's own command — because `USERNAME_FIELD` is `email_id` it prompts
+for an email rather than a username:
 
 ```bash
 python manage.py createsuperuser
 ```
 
+> **Signing in:** the admin login form labels its first field **Username**, but
+> the project keys users on their email address, so type the email there.
+
 ---
 
 ## Using MySQL instead of SQLite
 
-`settings.py` switches backends on an environment variable. Set `XAMLYSIS_DB=mysql`
-and the project uses the MySQL block (database `xamlysis_datab` on
-`localhost:3306`); leave it unset for SQLite.
+`settings.py` picks a backend in this order:
+
+1. `XAMLYSIS_DB=mysql` -> MySQL, configured from the `MYSQL_*` variables below
+2. `DATABASE_URL` set -> that database, parsed by `dj-database-url` with SSL required
+3. neither -> SQLite at `db.sqlite3`
 
 ```bash
 pip install mysqlclient
 set XAMLYSIS_DB=mysql           # Windows
 # export XAMLYSIS_DB=mysql      # macOS / Linux
+set MYSQL_PASSWORD=yourpassword
 python manage.py migrate
 ```
 
-Update the credentials in `Online_Exam_Portal_Xamlysis/settings.py` to match your
-MySQL instance before running.
+Credentials are read from the environment, not stored in `settings.py`.
+
+---
+
+## Environment variables
+
+Nothing below is required for local development; the defaults give a working
+SQLite setup with `DEBUG` on.
+
+| Variable                      | Effect                                                              |
+|-------------------------------|---------------------------------------------------------------------|
+| `DJANGO_SECRET_KEY`           | Signing key. **Always set this in deployment** — the fallback is a development key committed to this repo. |
+| `DJANGO_DEBUG`                | `1` forces debug on, `0` forces it off. Unset means on locally and off on any recognised platform. |
+| `DJANGO_ALLOWED_HOSTS`        | Extra hosts, comma separated, added to the built-in list            |
+| `DJANGO_CSRF_TRUSTED_ORIGINS` | Extra trusted origins, comma separated                              |
+| `DATABASE_URL`                | Postgres (or any `dj-database-url`) connection string               |
+| `DJANGO_ADMIN_PASSWORD`       | Password `bootstrap_deploy` gives the admin account                 |
+| `XAMLYSIS_DB`                 | `mysql` selects the MySQL backend                                   |
+| `MYSQL_NAME` `MYSQL_USER` `MYSQL_PASSWORD` `MYSQL_HOST` `MYSQL_PORT` | MySQL connection details        |
+| `XAMLYSIS_NO_REEXEC`          | `1` stops `manage.py` switching to `.venv`                          |
+| `RENDER` / `VERCEL` / `DYNO`  | Set by the host. Any of them turns `DEBUG` off and enables secure cookies, HSTS and the HTTPS redirect. |
+| `RENDER_EXTERNAL_HOSTNAME`    | Set by Render; added to `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS`  |
+
+---
+
+## Deployment (Render)
+
+`render.yaml` is a Blueprint: it declares the web service and a free Postgres
+database together, so Render wires `DATABASE_URL` between them and generates
+`DJANGO_SECRET_KEY` and `DJANGO_ADMIN_PASSWORD` itself. No manual environment
+variables.
+
+1. Render dashboard -> **New** -> **Blueprint**
+2. Point it at this repository and **Apply**
+3. Read `DJANGO_ADMIN_PASSWORD` from the service's **Environment** tab to sign
+   in at `/admin/` as `admin@xamlysis.test`
+
+| File               | Role                                                      |
+|--------------------|-----------------------------------------------------------|
+| `render.yaml`      | Web service + Postgres, region, plan, env vars            |
+| `build.sh`         | Install, `collectstatic`, migrate, seed. Exits non-zero on failure so a bad migration stops the deploy |
+| `.python-version`  | Pins the interpreter to 3.12                              |
+| `requirements.txt` | Pinned dependencies                                       |
+
+The start command is `gunicorn Online_Exam_Portal_Xamlysis.wsgi:application`.
+Static files are served by WhiteNoise from inside the app, so no separate static
+host is needed; `WHITENOISE_USE_FINDERS` keeps that working whether or not
+`collectstatic` has run.
+
+On Render's free plan the service sleeps after about 15 minutes idle, so the
+first request after a quiet spell takes 30–60 seconds to wake.
+
+> **Serverless hosts.** An earlier attempt to deploy to Vercel was abandoned.
+> Django needs a persistent process and a writable filesystem; on serverless
+> every cold start pays Django's startup inside a short function timeout, and
+> SQLite cannot persist at all. `wsgi.py` still exposes `app` alongside
+> `application` for such platforms, which is harmless under gunicorn.
 
 ---
 
@@ -187,12 +331,15 @@ MySQL instance before running.
 
 ```
 Xamlysis/
-├── manage.py
+├── manage.py                       # re-execs under .venv if Django is missing
 ├── run.ps1  run.bat                # dev-server launchers (create venv on first use)
-├── db.sqlite3                      # SQLite database (schema migrated)
-├── requirements.txt                 # pinned dependencies, used by Vercel
+├── requirements.txt                # pinned dependencies
+├── render.yaml                     # Render blueprint: web service + Postgres
+├── build.sh                        # Render build: install, collectstatic, migrate, seed
+├── .python-version                 # interpreter pin for the host
+├── db.sqlite3                      # local SQLite database (untracked)
 ├── Online_Exam_Portal_Xamlysis/    # project package
-│   ├── settings.py                 # SQLite/MySQL switch, custom user model
+│   ├── settings.py                 # env-driven config, custom user model
 │   ├── urls.py                     # admin + database.urls
 │   ├── routing.py                  # Channels WebSocket routing (unused)
 │   ├── asgi.py  wsgi.py
@@ -204,7 +351,13 @@ Xamlysis/
 │   ├── admin.py                    # admin registration
 │   ├── consumers.py                # Channels echo consumer
 │   ├── management/commands/
-│   │   └── seed_demo.py            # demo dataset loader
+│   │   ├── seed_demo.py            # demo users, courses, exams and results
+│   │   ├── seed_courses.py         # 26 professional courses
+│   │   ├── seed_exams.py           # one 20 question exam per course
+│   │   ├── _exam_bank.py           # 640 questions, 20 per course
+│   │   ├── topup_exams.py          # raises the seed_demo papers to 20 questions
+│   │   ├── _topup_bank.py          # 105 questions, 15 per demo exam
+│   │   └── bootstrap_deploy.py     # migrate + seed + admin, for a fresh database
 │   └── migrations/                 # 0001 … 0007
 ├── template/                       # all HTML templates (flat, not per-app)
 ├── static/                         # CSS and images
@@ -356,9 +509,28 @@ These are pre-existing defects in the application code.
    `routing.py` and `consumers.py` are inert. `/chat_bot/` is a static help page
    rather than a live assistant.
 
-4. **Secrets are committed.** `SECRET_KEY` is hard-coded and `DEBUG = True` in
-   `settings.py`, and the MySQL password is in plain text. Move these to environment
-   variables before deploying anywhere.
+4. **A student in two classes breaks their dashboard.** `stu_home` calls
+   `class_stu_tech.objects.get(email_id=...)` (`database/views.py:261`), which
+   assumes exactly one class per student. `/class_select/` lets a student join
+   several, and the second one turns `/stu_home/` into a 500 with
+   `get() returned more than one class_stu_tech`. Reachable through normal UI
+   use; `seed_exams --enrol` avoids it by never adding a second class row.
+
+5. **A stray exam exists in the shipped SQLite file.** Exam code `test`
+   ("test 1") has `no_of_ques = 20` but no questions, and sits in class 1 where
+   no student is enrolled, so nothing renders it. Harmless, but it fails the
+   "every exam has 20 questions" check.
+
+### Fixed since first release
+
+- **Secrets are no longer hard-coded.** `SECRET_KEY`, `DEBUG` and the MySQL
+  credentials come from the environment. The committed fallback key is for
+  development only — set `DJANGO_SECRET_KEY` in deployment. Note that the old
+  MySQL password remains in this repository's git history, so treat it as
+  compromised and rotate it anywhere it was used.
+- **`DEBUG` can no longer be left on by accident.** It is off whenever a
+  platform variable (`RENDER`, `VERCEL`, `DYNO`) is present, not only on one
+  named host.
 
 ---
 
@@ -392,3 +564,24 @@ point at a URL that does not exist, but both sit inside HTML comments and are
 inert in a browser.
 
 Static assets under `/static/` serve correctly.
+
+**Exam content** — every one of the 39 real exams carries 20 questions whose
+marks sum to that exam's `max_marks`, and the answer key is 25% on each of the
+four options across all 780 questions. Grading was checked by submitting papers
+through the `/test/` view: an all-correct submission scores full marks and an
+all-wrong submission scores zero, on 100 mark papers and on 50 mark papers with
+the uneven 3/2 mark split. All seven `seed_demo` results still agree with their
+stored marks after the top-up.
+
+**Fresh install** — the Quick start steps were run against an empty database:
+`bootstrap_deploy` seeded 2 roles, 26 courses and the admin account,
+`seed_exams` added 26 exams and 520 questions, and `topup_exams` correctly
+skipped the `seed_demo` exams that were not present. Every exam ended up with
+exactly 20 questions.
+
+**Deployment path** — the gunicorn target
+`Online_Exam_Portal_Xamlysis.wsgi:application` was loaded with `RENDER` set and
+asked for `/`, `/courses/`, `/contact/`, `/static/style.css` and
+`/admin/login/`: all 200, `DEBUG` off, HTTPS redirect on, static files served by
+WhiteNoise. `manage.py check --deploy` reports no issues once
+`DJANGO_SECRET_KEY` is set.
