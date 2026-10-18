@@ -95,13 +95,14 @@ Open <http://127.0.0.1:8000/>.
 
 ### Python version note
 
-The original `Pipfile` pins Python 3.9 and Django 3.2.6. Django 3.2 does **not**
+The project originally pinned Python 3.9 and Django 3.2.6 via a `Pipfile`,
+which was removed because it broke Vercel builds. Django 3.2 does **not**
 build on Python 3.12+. If you are on a newer interpreter, install a current
 Django instead of the pinned versions:
 
 | Your Python | Install                                  |
 |-------------|------------------------------------------|
-| 3.9 – 3.11  | `Django==3.2.6` (as pinned in `Pipfile`) |
+| 3.9 – 3.11  | `Django==3.2.6` (the original pin) |
 | 3.12 – 3.14 | `Django>=5.2`                            |
 
 The codebase runs unmodified on Django 5.2 — this README was verified against
@@ -189,7 +190,7 @@ Xamlysis/
 ├── manage.py
 ├── run.ps1  run.bat                # dev-server launchers (create venv on first use)
 ├── db.sqlite3                      # SQLite database (schema migrated)
-├── Pipfile                         # original Python 3.9 / Django 3.2 pins
+├── requirements.txt                 # pinned dependencies, used by Vercel
 ├── Online_Exam_Portal_Xamlysis/    # project package
 │   ├── settings.py                 # SQLite/MySQL switch, custom user model
 │   ├── urls.py                     # admin + database.urls
