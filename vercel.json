@@ -4,7 +4,7 @@
       "root": ".",
       "runtime": "python",
       "entrypoint": "Online_Exam_Portal_Xamlysis/wsgi.py",
-      "buildCommand": "./build.sh"
+      "buildCommand": "bash build.sh"
     }
   },
   "rewrites": [

@@ -1,5 +1,4 @@
 
-from os import P_OVERLAY
 from django.contrib.auth.base_user import BaseUserManager
 from django.db import models
 from django.db.models.deletion import CASCADE

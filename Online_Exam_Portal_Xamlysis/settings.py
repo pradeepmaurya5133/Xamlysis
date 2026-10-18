@@ -109,7 +109,12 @@ TEMPLATES = [
     },
 ]
 
-ASGI_APPLICATION = 'Online_Exam_Portal_Xamlysis.routing.application'
+# Channels is disabled (it is commented out of INSTALLED_APPS and is not a
+# dependency), so routing.py cannot be imported. Naming it here made the
+# deployment platform load it as the ASGI entrypoint, which crashed every
+# request with ModuleNotFoundError: No module named 'channels'. Restore this
+# line only together with channels in INSTALLED_APPS and requirements.
+# ASGI_APPLICATION = 'Online_Exam_Portal_Xamlysis.routing.application'
 WSGI_APPLICATION = 'Online_Exam_Portal_Xamlysis.wsgi.application'
 
 

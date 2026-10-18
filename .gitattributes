@@ -1,0 +1,9 @@
+# Shell scripts must keep LF endings: the deploy platform runs them with bash,
+# and CRLF makes every line end in a stray carriage return.
+*.sh text eol=lf
+
+# Same for files the Linux build reads directly.
+build.sh text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+.python-version text eol=lf
