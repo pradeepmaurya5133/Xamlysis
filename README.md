@@ -2,7 +2,7 @@
 
 An online examination portal built with Django. Teachers schedule exams, author
 multiple-choice question papers and review results; students register for exams,
-attempt them in the browser and get scored instantly.
+attempt them in the browser and get scored instantly....
 
 > Originally written against **Django 3.2 / Python 3.9** with MySQL. It runs on
 > SQLite with no configuration, which is the default and the quickest way to get
