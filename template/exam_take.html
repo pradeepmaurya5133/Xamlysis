@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+{% comment %}
+Extends base.html, the chrome-free layout, so there is no navbar tempting a
+student away mid-exam. The paper is rendered one question at a time from the
+JSON payload; the payload carries no correct answers.
+{% endcomment %}
+{% block title %}{{ exam.exam_title }}{% endblock title %}
+
+{% block head_extra %}
+<style>
+  .exam-shell { display: grid; grid-template-columns: 1fr 280px; gap: 1.5rem; max-width: 1180px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+  .exam-bar { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: .9rem 1.2rem; background: #0e1e32; color: #fff; }
+  .exam-bar h1 { margin: 0; font-size: 1.05rem; font-weight: 700; }
+  .exam-bar .meta { font-size: .82rem; color: rgba(255,255,255,.75); }
+  .exam-timer { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 1.25rem; padding: .35rem .9rem; border-radius: 999px; background: rgba(255,255,255,.12); }
+  .exam-timer.warning { background: #b45309; }
+  .exam-timer.danger { background: #b91c1c; animation: pulse 1s infinite; }
+  @keyframes pulse { 50% { opacity: .55; } }
+  .question-card { background: #fff; border: 1px solid #e3e8ef; border-radius: 14px; padding: 1.5rem; }
+  .question-head { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+  .question-head .num { font-weight: 800; color: #0e1e32; }
+  .question-text { font-size: 1.08rem; line-height: 1.6; margin-bottom: 1.25rem; }
+  .opt { display: flex; align-items: flex-start; gap: .75rem; padding: .85rem 1rem; margin-bottom: .6rem; border: 1px solid #e3e8ef; border-radius: 10px; cursor: pointer; transition: border-color .12s, background .12s; }
+  .opt:hover { border-color: #94a3b8; background: #f8fafc; }
+  .opt.selected { border-color: #2563eb; background: #eff6ff; }
+  .opt input { margin-top: .25rem; }
+  .exam-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.5rem; }
+  .palette { background: #fff; border: 1px solid #e3e8ef; border-radius: 14px; padding: 1.1rem; position: sticky; top: 5rem; }
+  .palette h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .07em; color: #64748b; margin-bottom: .9rem; }
+  .palette-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: .45rem; }
+  .pal { aspect-ratio: 1; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; font-weight: 700; font-size: .85rem; cursor: pointer; color: #0f172a; }
+  .pal.answered { background: #16a34a; border-color: #16a34a; color: #fff; }
+  .pal.marked { background: #7c3aed; border-color: #7c3aed; color: #fff; }
+  .pal.answered.marked { background: #7c3aed; box-shadow: inset 0 -6px 0 #16a34a; }
+  .pal.current { outline: 3px solid #2563eb; outline-offset: 1px; }
+  .legend { margin-top: 1rem; font-size: .78rem; color: #475569; }
+  .legend span { display: inline-flex; align-items: center; gap: .35rem; margin-right: .8rem; }
+  .swatch { width: .8rem; height: .8rem; border-radius: 3px; display: inline-block; border: 1px solid #cbd5e1; }
+  .save-state { font-size: .78rem; color: #64748b; min-height: 1.2em; }
+  .save-state.error { color: #b91c1c; font-weight: 600; }
+  @media (max-width: 900px) { .exam-shell { grid-template-columns: 1fr; } .palette { position: static; } }
+</style>
+{% endblock head_extra %}
+
+{% block body %}
+<div class="exam-bar">
+  <div>
+    <h1>{{ exam.exam_title }}</h1>
+    <div class="meta">
+      {{ exam.exam_code }} &middot; {{ total_questions }} questions &middot;
+      {{ exam.max_marks }} marks &middot; attempt {{ attempt.attempt_no }}
+    </div>
+  </div>
+  <div class="exam-timer" id="timer" aria-live="polite">--:--</div>
+</div>
+
+<div class="exam-shell">
+  <main>
+    <article class="question-card">
+      <div class="question-head">
+        <span class="num">Question <span id="q-num">1</span> of {{ total_questions }}</span>
+        <span class="text-muted"><span id="q-marks"></span> marks</span>
+      </div>
+      <p class="question-text" id="q-text"></p>
+      <div id="q-options"></div>
+
+      <div class="exam-actions">
+        <button class="btn btn-outline-secondary" type="button" id="prev-btn">&larr; Previous</button>
+        <button class="btn btn-outline-primary" type="button" id="next-btn">Next &rarr;</button>
+        <button class="btn btn-outline-secondary" type="button" id="mark-btn">Mark for review</button>
+        <button class="btn btn-outline-danger" type="button" id="clear-btn">Clear answer</button>
+      </div>
+      <p class="save-state mt-3" id="save-state"></p>
+    </article>
+  </main>
+
+  <aside>
+    <div class="palette">
+      <h2>Question palette</h2>
+      <div class="palette-grid" id="palette"></div>
+      <div class="legend">
+        <span><i class="swatch" style="background:#16a34a"></i> Answered</span>
+        <span><i class="swatch" style="background:#7c3aed"></i> Marked</span>
+        <span><i class="swatch" style="background:#fff"></i> Not visited</span>
+      </div>
+      <hr>
+      <p class="mb-2" style="font-size:.85rem">
+        Answered <strong id="count-answered">0</strong> of {{ total_questions }}
+      </p>
+      <form method="post" action="{% url 'exam_submit' attempt.pk %}" id="submit-form">
+        {% csrf_token %}
+        <input type="hidden" name="auto" id="auto-flag" value="0">
+        <button class="btn btn-primary btn-block w-100" type="submit" id="submit-btn">Submit exam</button>
+      </form>
+    </div>
+  </aside>
+</div>
+
+{{ questions_json|json_script:"questions-data" }}
+{% endblock body %}
+
+{% block scripts %}
+<script>
+(function () {
+  "use strict";
+
+  var questions = JSON.parse(document.getElementById("questions-data").textContent);
+  var saveUrl = "{% url 'exam_save_answer' attempt.pk %}";
+  var csrfToken = document.querySelector("#submit-form [name=csrfmiddlewaretoken]").value;
+  var current = 0;
+  var remaining = {{ seconds_remaining }};
+  var submitting = false;
+
+  var elNum = document.getElementById("q-num");
+  var elText = document.getElementById("q-text");
+  var elMarks = document.getElementById("q-marks");
+  var elOptions = document.getElementById("q-options");
+  var elPalette = document.getElementById("palette");
+  var elTimer = document.getElementById("timer");
+  var elState = document.getElementById("save-state");
+  var elAnswered = document.getElementById("count-answered");
+  var form = document.getElementById("submit-form");
+
+  function announce(message, isError) {
+    elState.textContent = message;
+    elState.className = "save-state mt-3" + (isError ? " error" : "");
+  }
+
+  // ---- saving ----------------------------------------------------------
+  function save(question) {
+    announce("Saving...", false);
+    return fetch(saveUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken },
+      credentials: "same-origin",
+      body: JSON.stringify({
+        question_id: question.id,
+        selected_option: question.selected,
+        marked_for_review: question.marked
+      })
+    }).then(function (res) {
+      if (res.status === 409) {
+        // Time ran out, or it was submitted elsewhere. Go to the result.
+        window.location = "{% url 'exam_result' attempt.pk %}";
+        return null;
+      }
+      if (!res.ok) { throw new Error("save failed"); }
+      return res.json();
+    }).then(function (data) {
+      if (data) {
+        announce("Saved", false);
+        if (typeof data.seconds_remaining === "number") {
+          remaining = data.seconds_remaining;   // trust the server's clock
+        }
+      }
+    }).catch(function () {
+      announce("Could not save that answer. Check your connection; it will retry when you change it again.", true);
+    });
+  }
+
+  // ---- rendering -------------------------------------------------------
+  function renderQuestion() {
+    var q = questions[current];
+    elNum.textContent = q.number;
+    elText.textContent = q.text;
+    elMarks.textContent = q.marks;
+    elOptions.innerHTML = "";
+
+    q.options.forEach(function (text, i) {
+      var value = i + 1;
+      var label = document.createElement("label");
+      label.className = "opt" + (q.selected === value ? " selected" : "");
+
+      var input = document.createElement("input");
+      input.type = "radio";
+      input.name = "option";
+      input.value = String(value);
+      input.checked = q.selected === value;
+      input.addEventListener("change", function () {
+        q.selected = value;
+        renderQuestion();
+        renderPalette();
+        save(q);
+      });
+
+      var span = document.createElement("span");
+      span.textContent = text;
+
+      label.appendChild(input);
+      label.appendChild(span);
+      elOptions.appendChild(label);
+    });
+
+    document.getElementById("mark-btn").textContent =
+      q.marked ? "Unmark review" : "Mark for review";
+    document.getElementById("prev-btn").disabled = current === 0;
+    document.getElementById("next-btn").disabled = current === questions.length - 1;
+  }
+
+  function renderPalette() {
+    elPalette.innerHTML = "";
+    var answered = 0;
+    questions.forEach(function (q, i) {
+      if (q.selected !== null) { answered += 1; }
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "pal" +
+        (q.selected !== null ? " answered" : "") +
+        (q.marked ? " marked" : "") +
+        (i === current ? " current" : "");
+      btn.textContent = q.number;
+      btn.addEventListener("click", function () {
+        current = i;
+        renderQuestion();
+        renderPalette();
+      });
+      elPalette.appendChild(btn);
+    });
+    elAnswered.textContent = answered;
+  }
+
+  // ---- controls --------------------------------------------------------
+  document.getElementById("next-btn").addEventListener("click", function () {
+    if (current < questions.length - 1) { current += 1; renderQuestion(); renderPalette(); }
+  });
+  document.getElementById("prev-btn").addEventListener("click", function () {
+    if (current > 0) { current -= 1; renderQuestion(); renderPalette(); }
+  });
+  document.getElementById("mark-btn").addEventListener("click", function () {
+    var q = questions[current];
+    q.marked = !q.marked;
+    renderQuestion();
+    renderPalette();
+    save(q);
+  });
+  document.getElementById("clear-btn").addEventListener("click", function () {
+    var q = questions[current];
+    q.selected = null;
+    renderQuestion();
+    renderPalette();
+    save(q);
+  });
+
+  form.addEventListener("submit", function (event) {
+    if (submitting) { event.preventDefault(); return; }   // no double submit
+    if (document.getElementById("auto-flag").value !== "1") {
+      var left = questions.filter(function (q) { return q.selected === null; }).length;
+      var message = left
+        ? "You have " + left + " unanswered question(s). Submit anyway?"
+        : "Submit your exam?";
+      if (!window.confirm(message)) { event.preventDefault(); return; }
+    }
+    submitting = true;
+    document.getElementById("submit-btn").disabled = true;
+  });
+
+  // ---- timer -----------------------------------------------------------
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+
+  function tick() {
+    if (remaining <= 0) {
+      elTimer.textContent = "00:00";
+      if (!submitting) {
+        submitting = true;
+        document.getElementById("auto-flag").value = "1";
+        form.submit();      // the server also expires it, this is just prompt
+      }
+      return;
+    }
+    remaining -= 1;
+    var m = Math.floor(remaining / 60);
+    var s = remaining % 60;
+    elTimer.textContent = pad(Math.floor(m / 60)) + ":" + pad(m % 60) + ":" + pad(s);
+    elTimer.className = "exam-timer" +
+      (remaining <= 60 ? " danger" : (remaining <= 300 ? " warning" : ""));
+  }
+
+  renderQuestion();
+  renderPalette();
+  tick();
+  setInterval(tick, 1000);
+})();
+</script>
+{% endblock scripts %}

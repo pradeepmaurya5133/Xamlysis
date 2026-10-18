@@ -1,0 +1,12 @@
+{% extends 'base1.html' %}
+{% block title %}Cannot start exam{% endblock title %}
+{% block body %}
+<section class="page-shell container">
+  <article class="action-card">
+    <h1 class="section-title">{{ exam.exam_title }}</h1>
+    <p>{{ reason }}</p>
+    <a class="btn btn-primary" href="{% url 'exam_catalogue' %}">Back to exams</a>
+    <a class="btn btn-outline-secondary" href="{% url 'exam_history' %}">My history</a>
+  </article>
+</section>
+{% endblock body %}

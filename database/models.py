@@ -7,6 +7,7 @@ from django.db.models.fields import related
 from django.db.models.fields.related import ForeignKey
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
+from django.utils import timezone
 
 # Create your models here.
 
@@ -92,6 +93,31 @@ class exam_details(models.Model):
     email_id = models.ForeignKey(settings.AUTH_USER_MODEL , on_delete=models.CASCADE )
     class_stu = models.IntegerField(default=11)
 
+    # Added by the exam engine. Every field has a default so existing rows
+    # migrate without a data migration.
+    PRACTICE = 'practice'
+    FULL_LENGTH = 'full'
+    EXAM_TYPE_CHOICES = [
+        (PRACTICE, 'Practice Test'),
+        (FULL_LENGTH, 'Full-Length Exam'),
+    ]
+    exam_type = models.CharField(
+        max_length=20, choices=EXAM_TYPE_CHOICES, default=FULL_LENGTH,
+        help_text='Practice tests are open-ended; full-length exams are the scheduled papers.',
+    )
+    pass_percentage = models.PositiveSmallIntegerField(
+        default=35, help_text='Percentage needed to pass.',
+    )
+    max_attempts = models.PositiveSmallIntegerField(
+        default=3, help_text='How many times a student may sit this exam. 0 means unlimited.',
+    )
+    is_published = models.BooleanField(
+        default=True, help_text='Unpublished exams are hidden from students.',
+    )
+
+    def __str__(self):
+        return '%s - %s' % (self.exam_code, self.exam_title)
+
 class ques_table(models.Model):
     ques_id=models.CharField(max_length=50 , primary_key=True)
     ques=models.TextField(max_length=500)
@@ -102,6 +128,16 @@ class ques_table(models.Model):
     correct=models.IntegerField()
     marks=models.IntegerField()
     exam_code=models.ForeignKey("exam_details" , on_delete=models.CASCADE )
+
+    # Shown on the result page only, never while the exam is open.
+    explanation = models.TextField(
+        max_length=1000, blank=True, default='',
+        help_text='Shown to the student with their result. Optional.',
+    )
+
+    def options(self):
+        """The four options in order, so templates do not repeat themselves."""
+        return [self.option1, self.option2, self.option3, self.option4]
 
 class answer_table(models.Model):
     exam_code=models.ForeignKey("exam_details" , on_delete=models.CASCADE )
@@ -151,3 +187,96 @@ class sample(models.Model):
 # You should also define a custom manager for your user model.
 # If your user model defines username, email, is_staff, is_active, is_superuser, last_login, and date_joined fields the same as Django’s default user, you can install Django’s UserManager;
 #  however, if your user model defines different fields, you’ll need to define a custom manager that extends BaseUserManager
+
+
+# ---------------------------------------------------------------------------
+# Exam engine
+#
+# The models above are the project's original schema and are left untouched so
+# that existing rows keep working. The engine below adds what a real sitting
+# needs and the originals do not model: a single attempt, when it started, when
+# it must end, and one saved answer per question that survives a refresh.
+#
+# answer_table and score_table are still written on submission so the existing
+# "previous exams" pages keep working against the same data they always used.
+# ---------------------------------------------------------------------------
+
+
+class ExamAttempt(models.Model):
+    """One student's sitting of one exam.
+
+    The deadline is stored rather than counted in the browser, so a reload, a
+    second tab or a edited clock cannot buy extra time: every request checks
+    expires_at on the server.
+    """
+
+    IN_PROGRESS = 'in_progress'
+    SUBMITTED = 'submitted'
+    EXPIRED = 'expired'
+    STATUS_CHOICES = [
+        (IN_PROGRESS, 'In progress'),
+        (SUBMITTED, 'Submitted'),
+        (EXPIRED, 'Expired'),
+    ]
+
+    exam = models.ForeignKey('exam_details', on_delete=models.CASCADE, related_name='attempts')
+    student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='exam_attempts')
+    attempt_no = models.PositiveIntegerField(default=1)
+
+    started_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=IN_PROGRESS)
+    auto_submitted = models.BooleanField(default=False)
+
+    # Filled in by the server when the attempt is scored.
+    score = models.IntegerField(default=0)
+    max_marks = models.IntegerField(default=0)
+    percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    passed = models.BooleanField(default=False)
+    correct_count = models.IntegerField(default=0)
+    wrong_count = models.IntegerField(default=0)
+    unanswered_count = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ['-started_at']
+        indexes = [
+            models.Index(fields=['student', 'exam']),
+            models.Index(fields=['status']),
+        ]
+
+    def __str__(self):
+        return '%s - %s (attempt %d)' % (self.student_id, self.exam_id, self.attempt_no)
+
+    @property
+    def is_open(self):
+        """True while the attempt may still accept answers."""
+        return self.status == self.IN_PROGRESS and timezone.now() < self.expires_at
+
+    def seconds_remaining(self):
+        if self.status != self.IN_PROGRESS:
+            return 0
+        return max(0, int((self.expires_at - timezone.now()).total_seconds()))
+
+
+class AttemptAnswer(models.Model):
+    """A single saved answer, rewritten in place every time it changes.
+
+    selected_option is null while a question is untouched, which is what makes
+    the unanswered count meaningful. is_correct stays null until the attempt is
+    scored, so nothing in this table reveals the key before submission.
+    """
+
+    attempt = models.ForeignKey(ExamAttempt, on_delete=models.CASCADE, related_name='answers')
+    question = models.ForeignKey('ques_table', on_delete=models.CASCADE)
+    selected_option = models.PositiveSmallIntegerField(null=True, blank=True)
+    marked_for_review = models.BooleanField(default=False)
+    is_correct = models.BooleanField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = [('attempt', 'question')]
+        ordering = ['question_id']
+
+    def __str__(self):
+        return '%s / %s = %s' % (self.attempt_id, self.question_id, self.selected_option)

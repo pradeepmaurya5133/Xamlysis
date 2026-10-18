@@ -29,6 +29,8 @@
           <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
           {% if user.is_authenticated %}
           <li class="nav-item"><a class="nav-link" href="/stu_home/">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'exam_catalogue' %}">Exams</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'exam_history' %}">My Results</a></li>
           <li class="nav-item"><a class="nav-link" href="/class_select/">Classes</a></li>
           <li class="nav-item"><a class="nav-link" href="/course_select/">Courses</a></li>
           {% else %}
@@ -131,6 +133,8 @@
             <a href="/login">Login</a>
             <a href="/sign_up/">Sign Up</a>
             <a href="/stu_home/">Dashboard</a>
+            <a href="{% url 'exam_catalogue' %}">Exams</a>
+            <a href="{% url 'exam_history' %}">My Results</a>
             <a href="/change_setting/">Settings</a>
           </div>
 

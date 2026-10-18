@@ -1,5 +1,6 @@
 from django.urls import path
 from database import views
+from database import exam_views
 from django.contrib import admin
 
 urlpatterns = [
@@ -56,4 +57,14 @@ urlpatterns = [
     path('correct_ans/',views.correct_ans),
 
     path('index/' , views.index , name="index" ),
+
+    # Exam engine. The legacy /test/ route above now redirects into this flow,
+    # so there is one way to sit an exam rather than two.
+    path('exams/', exam_views.exam_catalogue, name='exam_catalogue'),
+    path('exams/history/', exam_views.exam_history, name='exam_history'),
+    path('exams/<str:exam_code>/start/', exam_views.start_attempt, name='exam_start'),
+    path('exams/attempt/<int:attempt_id>/', exam_views.take_exam, name='exam_take'),
+    path('exams/attempt/<int:attempt_id>/save/', exam_views.save_answer, name='exam_save_answer'),
+    path('exams/attempt/<int:attempt_id>/submit/', exam_views.submit_attempt, name='exam_submit'),
+    path('exams/attempt/<int:attempt_id>/result/', exam_views.exam_result, name='exam_result'),
 ]

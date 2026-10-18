@@ -1,0 +1,50 @@
+{% extends 'base1.html' %}
+{% block title %}Exams{% endblock title %}
+{% block body %}
+<section class="page-shell container">
+  <header class="mb-4">
+    <h1 class="section-title">Exams</h1>
+    <p class="text-muted">
+      {{ total_exams }} published exam{{ total_exams|pluralize }} across classes 11 and 12.
+      {% if my_classes %}You are enrolled in class {{ my_classes|join:", " }}.{% endif %}
+      <a href="{% url 'exam_history' %}">View your exam history</a>
+    </p>
+  </header>
+
+  {% for klass in classes %}
+  <section class="mb-5">
+    <h2 class="h4 mb-3">
+      Class {{ klass.class_no }}
+      {% if klass.is_my_class %}<span class="status-pill status-pill-live">Your class</span>{% endif %}
+    </h2>
+
+    {% for course in klass.courses %}
+    <article class="action-card mb-3">
+      <h3 class="h5 mb-1">{{ course.course.course_name }}</h3>
+      <p class="text-muted mb-3" style="font-size:.85rem">{{ course.course.course_id }}</p>
+
+      {% if course.full %}
+      <h4 class="h6 text-uppercase text-muted" style="font-size:.72rem;letter-spacing:.07em">Full-length exams</h4>
+      <div class="mb-3">
+        {% for item in course.full %}{% include 'partials/exam_row.html' %}{% endfor %}
+      </div>
+      {% endif %}
+
+      {% if course.practice %}
+      <h4 class="h6 text-uppercase text-muted" style="font-size:.72rem;letter-spacing:.07em">Practice tests</h4>
+      <div>
+        {% for item in course.practice %}{% include 'partials/exam_row.html' %}{% endfor %}
+      </div>
+      {% endif %}
+
+      {% if not course.full and not course.practice %}
+      <p class="text-muted mb-0">No exams published for this course yet.</p>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </section>
+  {% empty %}
+  <p class="text-muted">No exams have been published yet.</p>
+  {% endfor %}
+</section>
+{% endblock body %}

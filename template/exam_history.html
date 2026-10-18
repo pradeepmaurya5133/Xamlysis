@@ -1,0 +1,61 @@
+{% extends 'base1.html' %}
+{% block title %}Exam history{% endblock title %}
+{% block body %}
+<section class="page-shell container">
+  <header class="mb-4">
+    <h1 class="section-title">Exam history</h1>
+    <p class="text-muted">
+      {{ total }} submitted attempt{{ total|pluralize }}, {{ passed }} passed.
+      <a href="{% url 'exam_catalogue' %}">Take another exam</a>
+    </p>
+  </header>
+
+  {% if attempts %}
+  <div class="table-responsive action-card">
+    <table class="table mb-0">
+      <thead>
+        <tr>
+          <th>Exam</th><th>Course</th><th>Attempt</th><th>Status</th>
+          <th class="text-right">Score</th><th class="text-right">%</th>
+          <th>Result</th><th>Submitted</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in attempts %}
+        <tr>
+          <td>{{ a.exam.exam_title }}<div class="text-muted" style="font-size:.78rem">{{ a.exam.exam_code }}</div></td>
+          <td>{{ a.exam.course_id.course_name }}</td>
+          <td>#{{ a.attempt_no }}</td>
+          <td>
+            {% if a.status == 'in_progress' %}<span class="status-pill status-pill-live">In progress</span>
+            {% else %}<span class="status-pill">Submitted</span>{% endif %}
+            {% if a.auto_submitted %}<div class="text-muted" style="font-size:.72rem">auto</div>{% endif %}
+          </td>
+          <td class="text-right">{% if a.status == 'in_progress' %}&mdash;{% else %}{{ a.score }} / {{ a.max_marks }}{% endif %}</td>
+          <td class="text-right">{% if a.status == 'in_progress' %}&mdash;{% else %}{{ a.percentage }}%{% endif %}</td>
+          <td>
+            {% if a.status == 'in_progress' %}&mdash;
+            {% elif a.passed %}<span style="color:#16a34a;font-weight:700">Passed</span>
+            {% else %}<span style="color:#b91c1c;font-weight:700">Not passed</span>{% endif %}
+          </td>
+          <td>{% if a.submitted_at %}{{ a.submitted_at|date:"d M Y, H:i" }}{% else %}&mdash;{% endif %}</td>
+          <td>
+            {% if a.status == 'in_progress' %}
+              <a class="btn btn-sm btn-primary" href="{% url 'exam_take' a.pk %}">Resume</a>
+            {% else %}
+              <a class="btn btn-sm btn-outline-secondary" href="{% url 'exam_result' a.pk %}">Review</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <article class="action-card">
+    <p class="mb-3">You have not attempted any exams yet.</p>
+    <a class="btn btn-primary" href="{% url 'exam_catalogue' %}">Browse exams</a>
+  </article>
+  {% endif %}
+</section>
+{% endblock body %}

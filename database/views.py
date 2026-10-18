@@ -977,72 +977,17 @@ def show(request):
 
 
 def test(request):
-    current_user=request.user
-    if request.method == 'POST':
-        print(request.POST)
-        exid1=request.POST.get('exid')
-        questions=ques_table.objects.filter(exam_code=exid1)
-        score=0
-        wrong=0
-        correct=0
-        total=0
-        for q in questions:
-            total+=q.marks
-            print(request.POST.get(q.ques))
-            ans='option'+str(q.correct)
-            print(ans)
-            if ans ==  request.POST.get(q.ques):
-                score+=q.marks
-                correct+=1
-                o_ref=answer_table(exam_code_id=exid1,email_id_id=current_user.email_id,check_correct=1,role_id_id=2,option_marked=q.correct,ques_id_id=q.ques_id)
-                o_ref.save()
-            else:
-                wrong+=1
-                ans=str(request.POST.get(q.ques))
-                l=len(ans)
-                ans=ans[l-1]
-                ans=int(ans)
-                o_ref=answer_table(exam_code_id=exid1,email_id_id=current_user.email_id,check_correct=0,role_id_id=2,option_marked=ans,ques_id_id=q.ques_id)
-                o_ref.save()
+    """Legacy entry point, kept so existing links and bookmarks still work.
 
-        percent = score/(total) *100
-        exid=request.POST.get("exid")
-        #print(score_table.objects.all().order_by('-id')[0].id,'-------')
-        id1=score_table.objects.all().order_by('-id')[0].id+1
-        o_ref=score_table(id=id1,exam_code_id=exid,email_id_id=current_user.email_id,role_id_id=2,scored_marks=score,percentage=percent)
-        o_ref.save()
-        context = {
-            'score':score,
-            'time': request.POST.get('timer'),
-            'correct':correct,
-            'wrong':wrong,
-            'percent':percent,
-            'total':total
-        }
-        return render(request,'test_result.html',context)
-    else:
-        examid=request.GET.get("exid")
-        questions=ques_table.objects.filter(exam_code=examid)
-        instr=exam_details.objects.get(exam_code=examid)
-        timee=str(instr.duration)
-        print(instr.duration)
-        time=instr.duration
-        time=str(time)
-        a=time.find(":")+1
-        b=time.find(":", a)
-        hour=int(time[0:a-1])
-        min=int(time[a:b])
-        sec=int(time[b+1:])
-        dur=hour*60*60+min*60+sec
-        #max_time=60
-        max_time=dur
-        context = {
-            'questions':questions,
-            'inst':instr, 
-            'examid':examid,
-            'max_time':max_time
-        }
-        return render(request,'test.html',context)
+    The exam itself is now handled by database/exam_views.py, which records a
+    real attempt with a server-side deadline and autosaved answers. Sending
+    this route there avoids maintaining two different ways to sit an exam.
+    """
+    exam_code = request.POST.get('exid') or request.GET.get('exid')
+    if not exam_code:
+        return redirect('exam_catalogue')
+    return redirect('exam_start', exam_code=exam_code)
+
 
 def correct_ans(request):
     exam_id1 = request.POST.get("course")
