@@ -6,3 +6,6 @@ db.sqlite3
 img/
 run.ps1
 run.bat
+Pipfile
+Pipfile.lock
+staticfiles/

@@ -14,3 +14,7 @@ from django.core.wsgi import get_wsgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Online_Exam_Portal_Xamlysis.settings')
 
 application = get_wsgi_application()
+
+# Vercel's Python runtime looks for a module level callable named "app".
+# Django only defines "application", so expose both names from one object.
+app = application
