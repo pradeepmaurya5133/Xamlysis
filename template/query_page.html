@@ -1,0 +1,32 @@
+{% extends 'base1.html' %}
+
+{% block title %}Raise A Query{% endblock title %}
+
+{% block body %}
+<section class="page-shell form-page">
+  <article class="form-card">
+    <div class="page-heading">
+      <h2>Raise A Query</h2>
+      <p>Ask your teacher about an exam. Your query is attached to the exam you came from.</p>
+    </div>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label for="id_query">Your Question</label>
+        {{ form.query }}
+        {% if form.query.errors %}
+        <div class="invalid-note">{{ form.query.errors|striptags }}</div>
+        {% endif %}
+      </div>
+
+      <button class="btn btn-primary btn-lg btn-block" type="submit">Submit Query</button>
+    </form>
+
+    <p class="form-footnote">
+      <a href="/stu_home/">Back to dashboard</a>
+    </p>
+  </article>
+</section>
+{% endblock body %}

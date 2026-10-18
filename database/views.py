@@ -8,6 +8,7 @@ from database.models import *
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth import login as auth_login, authenticate , logout as auth_logout
+from django.contrib.auth.decorators import login_required
 import datetime
 try:
     import mysql.connector
@@ -104,6 +105,48 @@ def home (request):
 def about(request):
     return render(request , 'about_page.html')
 
+def features(request):
+    """Static marketing page describing what the portal does."""
+    return render(request , 'features_page.html')
+
+def how_it_works(request):
+    """Step-by-step walkthrough for both roles."""
+    return render(request , 'how_it_works_page.html')
+
+def faq(request):
+    """Frequently asked questions."""
+    return render(request , 'faq_page.html')
+
+def contact(request):
+    """Contact details and a message form."""
+    sent = False
+    if request.method == 'POST':
+        # No mail backend is configured, so the message is acknowledged but
+        # not delivered. Wire up EMAIL_BACKEND in settings.py to send it.
+        sent = True
+    return render(request , 'contact_page.html' , {'sent': sent})
+
+def courses(request):
+    """Public catalogue of every course, grouped by class."""
+    catalogue = {}
+    for c in course_id.objects.all().order_by('class_stu_tech', 'course_name'):
+        exams = exam_details.objects.filter(course_id_id=c.course_id)
+        catalogue.setdefault(c.class_stu_tech, []).append({
+            'code': c.course_id,
+            'name': c.course_name,
+            'exams': exams.count(),
+            'questions': ques_table.objects.filter(exam_code__course_id_id=c.course_id).count(),
+        })
+
+    groups = [{'class_no': k, 'courses': v} for k, v in sorted(catalogue.items())]
+
+    return render(request , 'courses_page.html' , {
+        'groups': groups,
+        'total_courses': course_id.objects.count(),
+        'total_exams': exam_details.objects.count(),
+        'total_questions': ques_table.objects.count(),
+    })
+
 def change_setting(request):
     form=Change_Mobile_No_Form()
     current_user=request.user
@@ -118,7 +161,7 @@ def change_setting(request):
     return render(request , 'change_mobile_no.html' , {'form':form})
 
 def chat_bot(request):
-    return render(request , 'database/chat_bot.html')
+    return render(request , 'chat_bot.html')
 
 def query_page(request):
     if request.method=='GET':
@@ -138,8 +181,8 @@ def query_page(request):
                 return redirect('stu_home')
     else:
             form=Query_Form()
-   
-    return render (request , 'stu_sign_up.html' ,{'form':form,} )
+
+    return render (request , 'query_page.html' ,{'form':form,} )
 
 def add_notes(request):
     if request.method=='GET':
@@ -162,10 +205,28 @@ def add_notes(request):
     return render (request , 'stu_sign_up.html' ,{'form':form,} )
 
 def sign_up(request):
-    return render(request , 'database/sign_up.html')
+    return render(request , 'sign_up.html')
 
+@login_required
 def stu_future(request):
-    return render(request , 'database/stu_future.html')
+    """Exams scheduled ahead of today for the classes this student belongs to."""
+    current_user = request.user
+    today = datetime.datetime.now().date()
+
+    classes = [c.class_stu_tech for c in CST.objects.filter(email_id=current_user.email_id)]
+    taken = [s.exam_code_id for s in score_table.objects.filter(email_id_id=current_user.email_id)]
+    registered = [r.exam_code_id for r in registration_table.objects.filter(email_id_id=current_user.email_id)]
+
+    upcoming = [
+        e for e in exam_details.objects.filter(date__gte=today).order_by('date', 'start_time')
+        if e.class_stu in classes and e.exam_code not in taken
+    ]
+
+    return render(request , 'stu_future.html' , {
+        'upcoming': upcoming,
+        'register': registered,
+        'today': today,
+    })
 
 
 
@@ -188,6 +249,7 @@ def stu_future(request):
 
 
 
+@login_required
 def stu_home(request):
     current_user=request.user
     if request.GET.get('reg'):
@@ -315,24 +377,52 @@ def login_stu_home(request):
 
 
 def stu_login(request):
+    if request.user.is_authenticated:
+        return redirect('stu_home')
+
     if request.method=="POST":
-        email=request.POST.get('Email-Id')
-        username = request.POST.get('Username')
-        password=request.POST.get('Password')
+        form = AuthenticationForm(request , data=request.POST)
+        if form.is_valid():
+            user = authenticate(
+                username=form.cleaned_data.get('username'),
+                password=form.cleaned_data.get('password'),
+            )
+            if user is not None:
+                auth_login(request , user)
+                return redirect('stu_home')
+        messages.error(request , "Invalid email or password.")
+    else:
+        form = AuthenticationForm()
 
-        user1 = sign_up.authenticate(email=email , password=password ) 
-        user2 = sign_up.authenticate(username=username , password=password)
-        
-        if user1 is not None :
-            #login(request , user1)
-            return redirect("stu_home.html")
-        elif user2 is not None:
-            #login(request , user2)
-            return redirect("stu_home.html")
-    return render(request , 'stu_login.html')
+    return render(request , 'stu_login.html' , {'form':form})
 
+@login_required
 def stu_prev(request):
-    return render(request , 'database/stu_prev.html')
+    """Every exam this student has already been scored on."""
+    current_user = request.user
+    scores = score_table.objects.filter(email_id_id=current_user.email_id).order_by('-exam_code_id')
+
+    titles = {e.exam_code: e.exam_title for e in exam_details.objects.all()}
+    results = []
+    for s in scores:
+        results.append({
+            'exam_code': s.exam_code_id,
+            'exam_title': titles.get(s.exam_code_id, s.exam_code_id),
+            'scored_marks': s.scored_marks,
+            'percentage': s.percentage,
+            'passed': s.percentage >= 40,
+        })
+
+    attempted = len(results)
+    best = max([r['percentage'] for r in results], default=0)
+    average = round(sum([r['percentage'] for r in results]) / attempted, 2) if attempted else 0
+
+    return render(request , 'stu_prev.html' , {
+        'results': results,
+        'attempted': attempted,
+        'best': best,
+        'average': average,
+    })
 
 def stu_sign_up(request):
     if request.method=="POST":
@@ -360,8 +450,25 @@ def stu_sign_up(request):
     return render(request , 'stu_sign_up.html')
 
 
+@login_required
 def teach_future(request):
-    return render(request , 'database/teach_future.html')
+    """Exams this teacher has scheduled that have not happened yet."""
+    current_user = request.user
+    today = datetime.datetime.now().date()
+
+    exams = exam_details.objects.filter(
+        email_id_id=current_user.email_id, date__gte=today
+    ).order_by('date', 'start_time')
+
+    rows = []
+    for e in exams:
+        rows.append({
+            'exam': e,
+            'registered': registration_table.objects.filter(exam_code_id=e.exam_code).count(),
+            'questions': ques_table.objects.filter(exam_code_id=e.exam_code).count(),
+        })
+
+    return render(request , 'teach_future.html' , {'rows': rows, 'today': today})
 
 
 
@@ -383,6 +490,7 @@ def teach_future(request):
 
 
 
+@login_required
 def teach_home(request):
     current_user=request.user
     edobj=exam_details.objects.filter(email_id_id=current_user.email_id).values('exam_title' , 'exam_code', 'date' , 'max_marks' , 'duration' , 'start_time' ,'class_stu' ,)
@@ -632,29 +740,68 @@ def teach_home(request):
 
 
 def teach_login(request):
+    if request.user.is_authenticated:
+        return redirect('teach_home')
+
     if request.method=="POST":
-        email=request.POST.get('Email-Id')
-        username = request.POST.get('Username')
-        password=request.POST.get('Password')
+        form = AuthenticationForm(request , data=request.POST)
+        if form.is_valid():
+            user = authenticate(
+                username=form.cleaned_data.get('username'),
+                password=form.cleaned_data.get('password'),
+            )
+            if user is not None:
+                auth_login(request , user)
+                return redirect('teach_home')
+        messages.error(request , "Invalid email or password.")
+    else:
+        form = AuthenticationForm()
 
-        user1 = sign_up.authenticate(email=email , password=password ) 
-        user2 = sign_up.authenticate(username=username , password=password)
-        
-        if user1 is not None :
-            #login(request , user1)
-            return redirect("teach_home.html")
-        elif user2 is not None:
-            #login(request , user2)
-            return redirect("teach_home.html")
-
-    return render(request , 'teach_login.html')
+    return render(request , 'teach_login.html' , {'form':form})
 
 
+@login_required
 def teach_prev(request):
-    return render(request , 'database/teach_prev.html')
+    """Exams this teacher has already run, with aggregate student performance."""
+    current_user = request.user
+    today = datetime.datetime.now().date()
 
+    exams = exam_details.objects.filter(
+        email_id_id=current_user.email_id, date__lt=today
+    ).order_by('-date', '-start_time')
+
+    rows = []
+    for e in exams:
+        scores = list(score_table.objects.filter(exam_code_id=e.exam_code))
+        percentages = [float(s.percentage) for s in scores]
+        rows.append({
+            'exam': e,
+            'attempts': len(scores),
+            'average': round(sum(percentages) / len(percentages), 2) if percentages else 0,
+            'highest': max(percentages) if percentages else 0,
+            'lowest': min(percentages) if percentages else 0,
+        })
+
+    return render(request , 'teach_prev.html' , {'rows': rows})
+
+@login_required
 def teach_schedule(request):
-    return render(request , 'database/teach_schedule.html')
+    """Full timetable of this teacher's exams, split around today."""
+    current_user = request.user
+    today = datetime.datetime.now().date()
+
+    exams = exam_details.objects.filter(
+        email_id_id=current_user.email_id
+    ).order_by('date', 'start_time')
+
+    upcoming = [e for e in exams if e.date >= today]
+    past = [e for e in exams if e.date < today]
+
+    return render(request , 'teach_schedule.html' , {
+        'upcoming': upcoming,
+        'past': past,
+        'today': today,
+    })
 
 def teach_sign_up(request):
     if request.method=="POST":
@@ -678,13 +825,14 @@ def teach_sign_up(request):
 
         return redirect(request , 'teach_home.html' )
 
-    return render(request , 'teach_sign_up.html')
+    return render(request , 'teachers_sign_up.html')
 
 #added for checking
 def base1(request):
     return render(request , 'base1.html')
 
 
+@login_required
 def class_select(request):
     current_user=request.user
     classes=['1' , '2' , '3' , '4' , '5' , '6' ,'7' ,'8' , '9' , '10' ,'11','12']
@@ -725,6 +873,7 @@ def remove_class(request):
 
 
 
+@login_required
 def course_select(request):
     current_user=request.user
     classes=CST.objects.filter(email_id_id=current_user.email_id)
@@ -1117,6 +1266,13 @@ def exam_detail(request):
 
 
 def ques_setup(request):
+    # Question authoring is the second half of the exam_detail flow and relies on
+    # the session keys that view sets. Reaching this URL directly used to raise
+    # KeyError, so send the user back to the start of the flow instead.
+    if 'cnt' not in request.session or 'exam_code' not in request.session:
+        messages.info(request , "Create the exam first, then add its questions.")
+        return redirect('exam_detail')
+
     count=request.session['cnt']
     ec=request.session['exam_code']
     ec1=exam_code()

@@ -1,0 +1,123 @@
+{% extends 'base1.html' %}
+{% load static %}
+
+{% block title %}Features{% endblock title %}
+
+{% block body %}
+<section class="page-shell page-intro">
+  <div class="page-heading">
+    <span class="eyebrow">Features</span>
+    <h1>Everything An Exam Needs, Start To Finish</h1>
+    <p>
+      Xamlysis covers the whole cycle — scheduling a paper, getting students
+      registered, running the timed attempt, grading it, and turning the result
+      into something a student can actually learn from.
+    </p>
+  </div>
+</section>
+
+<section class="page-shell">
+  <div class="split-section">
+    <div class="split-copy">
+      <span class="eyebrow">For Teachers</span>
+      <h2>Build A Paper Once, Reuse The Structure</h2>
+      <p>
+        Set the exam code, title, date, start time and duration, then attach it to a
+        course and a class. Students in that class who are enrolled in that course see
+        it automatically — there is no separate invite step.
+      </p>
+      <ul class="tick-list">
+        <li><strong>Question authoring</strong> — four options per question, one correct answer, individual marks.</li>
+        <li><strong>Paper status</strong> — the schedule shows Ready or Incomplete so you never open an unfinished exam.</li>
+        <li><strong>Registration counts</strong> — see how many students have signed up before the day.</li>
+        <li><strong>Class performance</strong> — average, highest and lowest percentage per exam.</li>
+        <li><strong>Student queries</strong> — questions raised against an exam reach you directly.</li>
+      </ul>
+      <a class="btn btn-primary" href="/teachers_login/">Teacher Login</a>
+    </div>
+    <div class="split-media">
+      <img src="{% static 'img/c.png' %}" alt="Exam setup">
+    </div>
+  </div>
+
+  <div class="split-section reversed">
+    <div class="split-copy">
+      <span class="eyebrow">For Students</span>
+      <h2>Know What Is Coming, And How You Did</h2>
+      <p>
+        Pick your class, enrol in your courses, and your exam list fills itself in.
+        Register ahead of the date, attempt the paper when it opens, and get your
+        score the moment you submit.
+      </p>
+      <ul class="tick-list">
+        <li><strong>Scheduled view</strong> — every upcoming exam with date, duration and marks.</li>
+        <li><strong>One-tap registration</strong> — register early so the exam is ready on the day.</li>
+        <li><strong>Instant grading</strong> — marks and percentage calculated on submit.</li>
+        <li><strong>Answer review</strong> — see each question with your answer beside the correct one.</li>
+        <li><strong>Private notes</strong> — keep your own revision notes against any exam.</li>
+      </ul>
+      <a class="btn btn-primary" href="/student_login/">Student Login</a>
+    </div>
+    <div class="split-media">
+      <img src="{% static 'img/a.png' %}" alt="Performance analysis">
+    </div>
+  </div>
+</section>
+
+<section class="page-shell">
+  <div class="page-heading">
+    <h2>Under The Hood</h2>
+    <p>The details that make the day-to-day work predictable.</p>
+  </div>
+
+  <div class="feature-grid">
+    <article class="feature-card">
+      <div>
+        <h3>Class And Course Scoping</h3>
+        <p>An exam reaches a student only when both the class and the course match, so nobody sees a paper meant for another group.</p>
+      </div>
+    </article>
+    <article class="feature-card">
+      <div>
+        <h3>Per-Question Marks</h3>
+        <p>Questions carry their own weight. A five-mark definition and a twenty-mark derivation sit in the same paper.</p>
+      </div>
+    </article>
+    <article class="feature-card">
+      <div>
+        <h3>Randomised Order</h3>
+        <p>Question order is shuffled on each attempt, which makes casual copying considerably harder.</p>
+      </div>
+    </article>
+    <article class="feature-card">
+      <div>
+        <h3>Timed Attempts</h3>
+        <p>Each exam carries a duration. The attempt page tracks it so pacing becomes part of the practice.</p>
+      </div>
+    </article>
+    <article class="feature-card">
+      <div>
+        <h3>Role-Based Views</h3>
+        <p>One account, one role. Teachers and students get entirely different dashboards from the same login.</p>
+      </div>
+    </article>
+    <article class="feature-card">
+      <div>
+        <h3>Admin Console</h3>
+        <p>Django's admin at <code>/admin/</code> exposes every table for bulk edits and corrections.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="page-shell">
+  <div class="cta-panel">
+    <h2>See It With Real Data</h2>
+    <p>The demo database ships with six courses and seven exam papers already loaded.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary btn-lg" href="/courses/">Browse Courses</a>
+      <a class="btn btn-outline-primary btn-lg" href="/how_it_works/">How It Works</a>
+    </div>
+  </div>
+</section>
+{% endblock body %}

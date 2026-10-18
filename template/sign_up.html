@@ -1,5 +1,36 @@
-<!doctype html>
-<body>
-    <h1>sign up</h1>
-</body>
-</html>
+{% extends 'base1.html' %}
+
+{% block title %}Sign Up{% endblock title %}
+
+{% block body %}
+<section class="page-shell">
+  <div class="page-heading">
+    <h2>Create Your Account</h2>
+    <p>Pick the role that matches how you will use Xamlysis. You can only hold one role per account.</p>
+  </div>
+
+  <div class="selection-grid">
+    <article class="action-card">
+      <h2 class="section-title">I am a Student</h2>
+      <p>
+        Join a class, enrol in courses, register for scheduled exams, attempt timed
+        tests, and review your marks and answers afterwards.
+      </p>
+      <a class="btn btn-primary btn-lg" href="/temp_sign_up">Student Sign Up</a>
+    </article>
+
+    <article class="action-card">
+      <h2 class="section-title">I am a Teacher</h2>
+      <p>
+        Schedule exams for a class, author multiple-choice question papers, track who
+        has registered, and review how everyone performed.
+      </p>
+      <a class="btn btn-primary btn-lg" href="/temp_sign_up">Teacher Sign Up</a>
+    </article>
+  </div>
+
+  <p class="form-footnote text-center">
+    Already registered? <a href="/login">Login instead</a>
+  </p>
+</section>
+{% endblock body %}

@@ -1,0 +1,84 @@
+{% extends 'base1.html' %}
+
+{% block title %}Courses{% endblock title %}
+
+{% block body %}
+<section class="page-shell page-intro">
+  <div class="page-heading">
+    <span class="eyebrow">Catalogue</span>
+    <h1>Courses And Papers</h1>
+    <p>
+      Every course currently set up in the portal, with how many exams and
+      questions sit behind each one. Enrol from your account to make these
+      exams reachable.
+    </p>
+  </div>
+</section>
+
+<section class="page-shell kpi-strip">
+  <div class="kpi-card">
+    <strong>{{ total_courses }}</strong>
+    <span>Courses in the catalogue</span>
+  </div>
+  <div class="kpi-card">
+    <strong>{{ total_exams }}</strong>
+    <span>Exam papers scheduled</span>
+  </div>
+  <div class="kpi-card">
+    <strong>{{ total_questions }}</strong>
+    <span>Questions authored</span>
+  </div>
+</section>
+
+<section class="page-shell">
+  {% for group in groups %}
+  <div class="page-heading">
+    <h2>Class {{ group.class_no }}</h2>
+    <p>{{ group.courses|length }} course{{ group.courses|length|pluralize }} available for this class.</p>
+  </div>
+
+  <div class="teacher-grid">
+    {% for c in group.courses %}
+    <article class="action-card course-card">
+      <span class="course-code">{{ c.code }}</span>
+      <h2 class="section-title">{{ c.name }}</h2>
+      <div class="course-stats">
+        <span><strong>{{ c.exams }}</strong> exam{{ c.exams|pluralize }}</span>
+        <span><strong>{{ c.questions }}</strong> question{{ c.questions|pluralize }}</span>
+      </div>
+      {% if user.is_authenticated %}
+      <a class="btn btn-outline-primary btn-sm" href="/course_select">Manage Enrolment</a>
+      {% else %}
+      <a class="btn btn-outline-primary btn-sm" href="/login">Login To Enrol</a>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  {% empty %}
+  <div class="empty-state">
+    <h3>No courses yet</h3>
+    <p>
+      The catalogue is empty. Load the demo dataset with
+      <code>python manage.py seed_demo</code>, or add courses through
+      <a href="/admin/">the admin console</a>.
+    </p>
+  </div>
+  {% endfor %}
+</section>
+
+<section class="page-shell">
+  <div class="cta-panel">
+    <h2>Ready To Enrol?</h2>
+    <p>Pick your class first, then add the courses you study. Your exam list fills in from there.</p>
+    <div class="hero-actions">
+      {% if user.is_authenticated %}
+      <a class="btn btn-primary btn-lg" href="/class_select/">Select Your Class</a>
+      <a class="btn btn-outline-primary btn-lg" href="/course_select">Enrol In Courses</a>
+      {% else %}
+      <a class="btn btn-primary btn-lg" href="/sign_up/">Create An Account</a>
+      <a class="btn btn-outline-primary btn-lg" href="/how_it_works/">How It Works</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock body %}

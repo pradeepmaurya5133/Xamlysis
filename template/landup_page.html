@@ -6,19 +6,30 @@
 {% block body %}
 <section class="page-shell hero">
   <div class="hero-copy">
-    <h1>Xamlysis</h1>
+    <span class="eyebrow">Online Examination Portal</span>
+    <h1>Run Exams That Grade Themselves</h1>
     <p>
-      Plan exams, register students, run timed tests, and review scores from one focused online examination portal.
+      Schedule a paper, get your class registered, run the attempt under a timer,
+      and hand back marks the second a student submits. Teachers stop collecting
+      scripts; students stop waiting for results.
     </p>
     <div class="hero-actions">
       {% if user.is_authenticated %}
-      <a class="btn btn-primary btn-lg" href="/stu_home/">Open Dashboard</a>
-      <a class="btn btn-outline-primary btn-lg" href="/course_select/">Manage Courses</a>
+        {% if user.role_id.role_id == 2 %}
+        <a class="btn btn-primary btn-lg" href="/stu_home/">Open Dashboard</a>
+        <a class="btn btn-outline-primary btn-lg" href="/student_exams_scheduled/">Scheduled Exams</a>
+        {% else %}
+        <a class="btn btn-primary btn-lg" href="/teachers_home/">Open Dashboard</a>
+        <a class="btn btn-outline-primary btn-lg" href="/exam_detail">Create Exam</a>
+        {% endif %}
       {% else %}
-      <a class="btn btn-primary btn-lg" href="/temp_sign_up">Create Account</a>
-      <a class="btn btn-outline-primary btn-lg" href="/login">Login</a>
+      <a class="btn btn-primary btn-lg" href="/sign_up/">Create Account</a>
+      <a class="btn btn-outline-primary btn-lg" href="/how_it_works/">See How It Works</a>
       {% endif %}
     </div>
+    <p class="hero-note">
+      Free to use &middot; No setup for students &middot; Results the moment you submit
+    </p>
   </div>
   <div class="hero-media">
     <img src="{% static 'img/online_exam.png' %}" alt="Online exam workspace">
@@ -39,6 +50,96 @@
     <span>Classes, courses, and scheduled exams stay connected.</span>
   </div>
 </section>
+
+{% if user.is_authenticated %}
+<section class="page-shell">
+  <div class="page-heading">
+    {% if user.role_id.role_id == 2 %}
+    <h2>Your Exams</h2>
+    <p>Welcome back, {{ user.first_name|default:user.username }}. Jump straight to what you need.</p>
+    {% else %}
+    <h2>Your Teaching Tools</h2>
+    <p>Welcome back, {{ user.first_name|default:user.username }}. Manage your exams and classes.</p>
+    {% endif %}
+  </div>
+
+  <div class="teacher-grid">
+    {% if user.role_id.role_id == 2 %}
+    <article class="action-card">
+      <h2 class="section-title">Scheduled Exams</h2>
+      <p>See which exams are coming up for your class and register before the day.</p>
+      <a class="btn btn-primary" href="/student_exams_scheduled/">View Schedule</a>
+    </article>
+    <article class="action-card">
+      <h2 class="section-title">Previous Exams</h2>
+      <p>Review your marks, percentages, and the answers you gave on past tests.</p>
+      <a class="btn btn-outline-primary" href="/student_previous_exams/">View Results</a>
+    </article>
+    <article class="action-card">
+      <h2 class="section-title">Classes &amp; Courses</h2>
+      <p>Pick your class and enrol in courses so the right exams reach you.</p>
+      <a class="btn btn-outline-primary" href="/class_select/">Manage Enrolment</a>
+    </article>
+    <article class="action-card">
+      <h2 class="section-title">Raise A Query</h2>
+      <p>Ask your teacher a question about any exam you have taken or registered for.</p>
+      <a class="btn btn-outline-primary" href="/query_page/">Ask A Question</a>
+    </article>
+    {% else %}
+    <article class="action-card">
+      <h2 class="section-title">Exam Schedule</h2>
+      <p>Your full timetable of exams, split into what is coming and what has finished.</p>
+      <a class="btn btn-primary" href="/teachers_schedule/">View Timetable</a>
+    </article>
+    <article class="action-card">
+      <h2 class="section-title">Upcoming Exams</h2>
+      <p>Check registrations and whether each question paper is complete.</p>
+      <a class="btn btn-outline-primary" href="/teachers_future_exam_scheduled/">View Upcoming</a>
+    </article>
+    <article class="action-card">
+      <h2 class="section-title">Previous Exams</h2>
+      <p>See how each class performed, with averages and highest and lowest scores.</p>
+      <a class="btn btn-outline-primary" href="/teachers_previous_exams_scheduled/">View Results</a>
+    </article>
+    <article class="action-card">
+      <h2 class="section-title">Create An Exam</h2>
+      <p>Schedule a new exam and build its question paper for a class.</p>
+      <a class="btn btn-outline-primary" href="/exam_detail">Schedule Exam</a>
+    </article>
+    {% endif %}
+  </div>
+</section>
+{% else %}
+<section class="page-shell">
+  <div class="page-heading">
+    <h2>Get Started</h2>
+    <p>Pick how you are joining. Already registered? Sign in and pick up where you left off.</p>
+  </div>
+
+  <div class="teacher-grid">
+    <article class="action-card">
+      <h2 class="section-title">I am a Student</h2>
+      <p>Join a class, enrol in courses, register for exams, and track your results.</p>
+      <a class="btn btn-primary" href="/student_login/">Student Login</a>
+    </article>
+    <article class="action-card">
+      <h2 class="section-title">I am a Teacher</h2>
+      <p>Schedule exams, author question papers, and review how your class performed.</p>
+      <a class="btn btn-primary" href="/teachers_login/">Teacher Login</a>
+    </article>
+    <article class="action-card">
+      <h2 class="section-title">New Here?</h2>
+      <p>Create an account in a minute and pick the role that fits how you will use Xamlysis.</p>
+      <a class="btn btn-outline-primary" href="/sign_up/">Create Account</a>
+    </article>
+    <article class="action-card">
+      <h2 class="section-title">Need Help?</h2>
+      <p>Answers to the common questions about registering, scoring, and reviewing exams.</p>
+      <a class="btn btn-outline-primary" href="/faq/">Read The FAQ</a>
+    </article>
+  </div>
+</section>
+{% endif %}
 
 <section class="page-shell">
   <div class="page-heading">
@@ -67,6 +168,125 @@
         <p>Timed exam attempts help students build accuracy and pacing under realistic conditions.</p>
       </div>
     </article>
+  </div>
+</section>
+
+<section class="page-shell">
+  <div class="page-heading">
+    <h2>Three Steps To A Graded Paper</h2>
+    <p>The whole cycle, from an empty schedule to a result a student can learn from.</p>
+  </div>
+
+  <div class="step-row">
+    <article class="step-card">
+      <span class="step-number">1</span>
+      <h3>Schedule</h3>
+      <p>
+        A teacher sets the date, duration and marks, attaches the exam to a course
+        and a class, then writes the questions. Students in that class see it appear.
+      </p>
+    </article>
+    <article class="step-card">
+      <span class="step-number">2</span>
+      <h3>Attempt</h3>
+      <p>
+        Students register ahead of the day and sit the paper under its timer.
+        Question order is shuffled for every attempt.
+      </p>
+    </article>
+    <article class="step-card">
+      <span class="step-number">3</span>
+      <h3>Review</h3>
+      <p>
+        Marks and percentage are calculated on submit. Students compare their answers
+        against the correct ones; teachers get class averages and spread.
+      </p>
+    </article>
+  </div>
+
+  <div class="text-center">
+    <a class="btn btn-outline-primary" href="/how_it_works/">Read The Full Walkthrough</a>
+  </div>
+</section>
+
+<section class="page-shell">
+  <div class="split-section">
+    <div class="split-copy">
+      <span class="eyebrow">For Teachers</span>
+      <h2>Less Marking, More Teaching</h2>
+      <p>
+        Grading happens the moment a student submits, so the time you used to spend
+        on a stack of scripts goes back into the lesson. The numbers that matter —
+        average, highest, lowest, who turned up — are on one screen.
+      </p>
+      <ul class="tick-list">
+        <li>Author a paper once, with per-question marks.</li>
+        <li>See registration counts before the exam day.</li>
+        <li>Know at a glance whether a paper is Ready or Incomplete.</li>
+        <li>Read student queries attached to the exam they concern.</li>
+      </ul>
+      <a class="btn btn-primary" href="/features/">Explore Features</a>
+    </div>
+    <div class="split-media">
+      <img src="{% static 'img/online_exam_1.png' %}" alt="Teacher reviewing results">
+    </div>
+  </div>
+</section>
+
+<section class="page-shell">
+  <div class="page-heading">
+    <h2>Common Questions</h2>
+    <p>The things people ask before they start.</p>
+  </div>
+
+  <div class="faq-list">
+    <details class="faq-item">
+      <summary>What do I use as my username?</summary>
+      <p>Your email address — Xamlysis keys accounts on email rather than a separate username.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Why can I not see any exams?</summary>
+      <p>
+        An exam reaches you only when its class matches yours and you are enrolled in
+        its course. Check both in <a href="/class_select/">Classes</a> and
+        <a href="/course_select">Courses</a>.
+      </p>
+    </details>
+    <details class="faq-item">
+      <summary>Is there negative marking?</summary>
+      <p>No. A wrong answer scores zero for that question; nothing is deducted from your total.</p>
+    </details>
+    <details class="faq-item">
+      <summary>When do I get my result?</summary>
+      <p>Immediately on submit, along with a question-by-question breakdown of what you got right.</p>
+    </details>
+  </div>
+
+  <div class="text-center">
+    <a class="btn btn-outline-primary" href="/faq/">See All Questions</a>
+  </div>
+</section>
+
+<section class="page-shell">
+  <div class="cta-panel">
+    <h2>Start Your First Exam</h2>
+    <p>
+      Create an account, pick your role, and you are two minutes from a scheduled
+      paper or a registered seat.
+    </p>
+    <div class="hero-actions">
+      {% if user.is_authenticated %}
+        {% if user.role_id.role_id == 2 %}
+        <a class="btn btn-primary btn-lg" href="/student_exams_scheduled/">See Your Exams</a>
+        {% else %}
+        <a class="btn btn-primary btn-lg" href="/exam_detail">Schedule An Exam</a>
+        {% endif %}
+        <a class="btn btn-outline-primary btn-lg" href="/courses/">Browse Courses</a>
+      {% else %}
+      <a class="btn btn-primary btn-lg" href="/sign_up/">Create Account</a>
+      <a class="btn btn-outline-primary btn-lg" href="/courses/">Browse Courses</a>
+      {% endif %}
+    </div>
   </div>
 </section>
 {% endblock body %}

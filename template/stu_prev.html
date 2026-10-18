@@ -1,0 +1,75 @@
+{% extends 'base1.html' %}
+
+{% block title %}Previous Exams{% endblock title %}
+
+{% block body %}
+<section class="page-shell">
+  <div class="page-heading">
+    <h2>Previous Exams</h2>
+    <p>Every exam you have been scored on, with your marks and percentage.</p>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi-card">
+      <strong>{{ attempted }}</strong>
+      <span>Exams attempted</span>
+    </div>
+    <div class="kpi-card">
+      <strong>{{ best }}%</strong>
+      <span>Best percentage</span>
+    </div>
+    <div class="kpi-card">
+      <strong>{{ average }}%</strong>
+      <span>Average percentage</span>
+    </div>
+  </div>
+
+  <div class="table-panel">
+    <div class="table-panel-header">Results</div>
+    <div class="table-panel-scroll">
+      <table class="table text-center">
+        <thead>
+          <tr>
+            <th>Exam Code</th>
+            <th>Title</th>
+            <th>Score</th>
+            <th>Percentage</th>
+            <th>Result</th>
+            <th>Answers</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in results %}
+          <tr>
+            <td>{{ r.exam_code }}</td>
+            <td>{{ r.exam_title }}</td>
+            <td>{{ r.scored_marks }}</td>
+            <td>{{ r.percentage }}%</td>
+            <td>
+              {% if r.passed %}
+              <span class="status-pill status-pass">Passed</span>
+              {% else %}
+              <span class="status-pill status-fail">Needs Work</span>
+              {% endif %}
+            </td>
+            <td>
+              <form action="/correct_ans/" method="post">
+                {% csrf_token %}
+                <button class="btn btn-outline-primary btn-sm" type="submit" name="course" value="{{ r.exam_code }}">View</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="empty-cell">
+              You have not completed any exams yet.
+              <a href="/student_exams_scheduled/">See what is scheduled</a>.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock body %}

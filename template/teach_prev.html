@@ -1,0 +1,53 @@
+{% extends 'base1.html' %}
+
+{% block title %}Previous Exams{% endblock title %}
+
+{% block body %}
+<section class="page-shell">
+  <div class="page-heading">
+    <h2>Previous Exams</h2>
+    <p>Exams you have already run, with how the class performed on each.</p>
+  </div>
+
+  <div class="table-panel">
+    <div class="table-panel-header">Completed</div>
+    <div class="table-panel-scroll">
+      <table class="table text-center">
+        <thead>
+          <tr>
+            <th>Exam Code</th>
+            <th>Title</th>
+            <th>Date</th>
+            <th>Class</th>
+            <th>Attempts</th>
+            <th>Average</th>
+            <th>Highest</th>
+            <th>Lowest</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td>{{ r.exam.exam_code }}</td>
+            <td>{{ r.exam.exam_title }}</td>
+            <td>{{ r.exam.date }}</td>
+            <td>{{ r.exam.class_stu }}</td>
+            <td>{{ r.attempts }}</td>
+            <td>{{ r.average }}%</td>
+            <td>{{ r.highest }}%</td>
+            <td>{{ r.lowest }}%</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="empty-cell">
+              No exams have finished yet.
+              <a href="/teachers_future_exam_scheduled/">See what is scheduled</a>.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock body %}

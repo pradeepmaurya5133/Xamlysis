@@ -149,5 +149,9 @@ MESSAGE_TAGS = {
     50: 'critical',
 }
 
+# Where @login_required sends anonymous visitors (Django's default
+# /accounts/login/ does not exist in this project).
+LOGIN_URL = '/login'
+
 AUTH_USER_MODEL = 'database.User'
 #Django allows you to override the default user model by providing a value for the AUTH_USER_MODEL setting that references a custom model

@@ -1,5 +1,42 @@
-<!doctype html>
-<body>
-    <h1>teacher login</h1>
-</body>
-</html>
+{% extends 'base1.html' %}
+
+{% block title %}Teacher Login{% endblock title %}
+
+{% block body %}
+<section class="page-shell form-page">
+  <article class="form-card">
+    <div class="page-heading">
+      <h2>Teacher Login</h2>
+      <p>Sign in to schedule exams, author question papers, and review student performance.</p>
+    </div>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label for="id_username">Email Address</label>
+        <input class="form-control" type="text" name="username" id="id_username"
+               value="{{ form.username.value|default_if_none:'' }}"
+               placeholder="you@example.com" autocomplete="username" required>
+      </div>
+
+      <div class="form-group">
+        <label for="id_password">Password</label>
+        <input class="form-control" type="password" name="password" id="id_password"
+               placeholder="Your password" autocomplete="current-password" required>
+      </div>
+
+      {% if form.errors %}
+      <div class="alert alert-danger">Invalid email or password. Please try again.</div>
+      {% endif %}
+
+      <button class="btn btn-primary btn-lg btn-block" type="submit">Login</button>
+    </form>
+
+    <p class="form-footnote">
+      New here? <a href="/temp_sign_up">Create a teacher account</a><br>
+      Student instead? <a href="/student_login/">Student login</a>
+    </p>
+  </article>
+</section>
+{% endblock body %}

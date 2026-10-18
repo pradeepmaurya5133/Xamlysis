@@ -1,5 +1,78 @@
-<!doctype html>
-<body>
-    <h1>teacher sign up</h1>
-</body>
-</html>
+{% extends 'base1.html' %}
+
+{% block title %}Teacher Sign Up{% endblock title %}
+
+{% block body %}
+<section class="page-shell form-page">
+  <article class="form-card">
+    <div class="page-heading">
+      <h2>Teacher Sign Up</h2>
+      <p>Register as a teacher to schedule exams and build question papers for your classes.</p>
+    </div>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <div class="form-row">
+        <div class="form-group col-md-6">
+          <label for="id_name">Full Name</label>
+          <input class="form-control" type="text" name="Name" id="id_name" placeholder="Jane Doe" required>
+        </div>
+        <div class="form-group col-md-6">
+          <label for="id_username">Username</label>
+          <input class="form-control" type="text" name="Username" id="id_username" placeholder="janedoe" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group col-md-6">
+          <label for="id_email">Email Address</label>
+          <input class="form-control" type="email" name="Email-ID" id="id_email" placeholder="you@example.com" required>
+        </div>
+        <div class="form-group col-md-6">
+          <label for="id_password">Password</label>
+          <input class="form-control" type="password" name="Password" id="id_password" placeholder="Choose a password" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group col-md-6">
+          <label for="id_mobile">Mobile Number</label>
+          <input class="form-control" type="text" name="Mobile Number" id="id_mobile" placeholder="999 999 9999">
+        </div>
+        <div class="form-group col-md-6">
+          <label for="id_class">Class You Teach</label>
+          <select class="form-control" name="Class" id="id_class">
+            {% for n in "123456789" %}<option value="{{ forloop.counter }}">Class {{ forloop.counter }}</option>{% endfor %}
+            <option value="10">Class 10</option>
+            <option value="11" selected>Class 11</option>
+            <option value="12">Class 12</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="id_institute">Institute Name</label>
+        <input class="form-control" type="text" name="Institute Name" id="id_institute" placeholder="Your school or college">
+      </div>
+
+      <div class="form-group">
+        <label for="id_courses">Courses</label>
+        <input class="form-control" type="text" name="Courses" id="id_courses" placeholder="e.g. Physics, Mathematics">
+      </div>
+
+      <button class="btn btn-primary btn-lg btn-block" type="submit">Create Teacher Account</button>
+    </form>
+
+    <div class="alert alert-warning mt-3 mb-0">
+      <strong>Note:</strong> this legacy form posts to a view that still writes to the
+      removed <code>sign_up</code> model, so submitting it will fail. Use
+      <a href="/temp_sign_up">the working sign-up form</a> until that view is rewritten.
+    </div>
+
+    <p class="form-footnote">
+      Already registered? <a href="/teachers_login/">Teacher login</a>
+    </p>
+  </article>
+</section>
+{% endblock body %}

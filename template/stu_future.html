@@ -1,29 +1,54 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8"/>
-    <title>Chat Rooms</title>
-</head>
-<body>
-    What chat room would you like to enter?<br>
-    <input id="room-name-input" type="text" size="100"><br>
-    <input id="room-name-submit" type="button" value="Enter">
+{% extends 'base1.html' %}
 
-    <script>
-       document.querySelector('#room-name-input').focus();
-        document.querySelector('#room-name-input').onkeyup = function(e) {
-            if (e.keyCode === 13) {  // enter, return
-                document.querySelector('#room-name-submit').click();
-            }
-        };
+{% block title %}Scheduled Exams{% endblock title %}
 
-        document.querySelector('#room-name-submit').onclick = function(e) {
-            var roomName = document.querySelector('#room-name-input').value;
-            window.location.pathname = '/chat/' + roomName + '/';
-        
+{% block body %}
+<section class="page-shell">
+  <div class="page-heading">
+    <h2>Scheduled Exams</h2>
+    <p>Upcoming exams for your class. Register ahead of time so you can attempt them on the day.</p>
+  </div>
 
-        };
-    </script>
-
-</body>
-</html>
+  <div class="exam-list">
+    {% for e in upcoming %}
+    <article class="exam-card">
+      <div class="exam-card-main">
+        <h3>{{ e.exam_title }}</h3>
+        <p class="exam-code">{{ e.exam_code }}</p>
+        <div class="exam-meta">
+          <span><strong>Date</strong> {{ e.date }}</span>
+          <span><strong>Starts</strong> {{ e.start_time }}</span>
+          <span><strong>Duration</strong> {{ e.duration }}</span>
+          <span><strong>Questions</strong> {{ e.no_of_ques }}</span>
+          <span><strong>Max Marks</strong> {{ e.max_marks }}</span>
+          <span><strong>Class</strong> {{ e.class_stu }}</span>
+        </div>
+      </div>
+      <div class="exam-card-action">
+        {% if e.exam_code in register %}
+          <span class="status-pill status-pass">Registered</span>
+          {% if e.date == today %}
+          <form action="/test/" method="get">
+            <button class="btn btn-primary" type="submit" name="exid" value="{{ e.exam_code }}">Start Now</button>
+          </form>
+          {% endif %}
+        {% else %}
+          <form method="get" action="/stu_home/">
+            <button class="btn btn-primary" type="submit" name="reg" value="{{ e.exam_code }}">Register</button>
+          </form>
+        {% endif %}
+      </div>
+    </article>
+    {% empty %}
+    <div class="empty-state">
+      <h3>Nothing scheduled</h3>
+      <p>
+        There are no upcoming exams for your class right now. Make sure you have
+        <a href="/class_select/">selected a class</a> and
+        <a href="/course_select">enrolled in your courses</a>.
+      </p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock body %}

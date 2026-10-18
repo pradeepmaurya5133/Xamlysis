@@ -1,0 +1,91 @@
+{% extends 'base1.html' %}
+
+{% block title %}Contact{% endblock title %}
+
+{% block body %}
+<section class="page-shell page-intro">
+  <div class="page-heading">
+    <span class="eyebrow">Contact</span>
+    <h1>Get In Touch</h1>
+    <p>Questions about the portal, a problem with an exam, or feedback — all of it is welcome.</p>
+  </div>
+</section>
+
+<section class="page-shell">
+  <div class="contact-layout">
+    <article class="form-card">
+      {% if sent %}
+      <div class="alert alert-success">
+        <strong>Thanks.</strong> Your message has been received.
+      </div>
+      {% endif %}
+
+      <h2 class="section-title">Send A Message</h2>
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label for="id_name">Your Name</label>
+            <input class="form-control" type="text" name="name" id="id_name" placeholder="Jane Doe" required>
+          </div>
+          <div class="form-group col-md-6">
+            <label for="id_email">Email Address</label>
+            <input class="form-control" type="email" name="email" id="id_email" placeholder="you@example.com" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="id_subject">Subject</label>
+          <select class="form-control" name="subject" id="id_subject">
+            <option>General question</option>
+            <option>Problem with an exam</option>
+            <option>Account or login issue</option>
+            <option>Feedback or suggestion</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="id_message">Message</label>
+          <textarea class="form-control" name="message" id="id_message" rows="6" placeholder="Tell us what is going on." required></textarea>
+        </div>
+
+        <button class="btn btn-primary btn-lg btn-block" type="submit">Send Message</button>
+      </form>
+
+      <div class="alert alert-info mt-3 mb-0">
+        <strong>Note:</strong> no mail backend is configured, so this form acknowledges
+        your message without delivering it. Set <code>EMAIL_BACKEND</code> in
+        <code>settings.py</code> to make it send.
+      </div>
+    </article>
+
+    <aside class="contact-aside">
+      <article class="action-card">
+        <h2 class="section-title">Reach Us Directly</h2>
+        <p class="contact-line"><strong>Email</strong><br>xyz@example.com</p>
+        <p class="contact-line"><strong>Phone</strong><br>999 999 9999</p>
+        <p class="contact-line mb-0"><strong>Hours</strong><br>Monday to Friday, 9am to 5pm</p>
+      </article>
+
+      <article class="action-card">
+        <h2 class="section-title">Faster Answers</h2>
+        <p>Most questions are already covered in writing — try these first.</p>
+        <p class="mb-2"><a href="/faq/">Frequently asked questions</a></p>
+        <p class="mb-2"><a href="/how_it_works/">How the portal works</a></p>
+        <p class="mb-0"><a href="/chat_bot/">Help centre</a></p>
+      </article>
+
+      <article class="action-card">
+        <h2 class="section-title">Exam Problem?</h2>
+        <p>
+          If it concerns a specific exam, raising a query attaches your question to that
+          paper so your teacher sees the context.
+        </p>
+        <a class="btn btn-outline-primary btn-sm" href="/query_page/">Raise A Query</a>
+      </article>
+    </aside>
+  </div>
+</section>
+{% endblock body %}

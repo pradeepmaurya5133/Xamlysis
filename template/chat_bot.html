@@ -1,0 +1,86 @@
+{% extends 'base1.html' %}
+
+{% block title %}Help{% endblock title %}
+
+{% block body %}
+<section class="page-shell">
+  <div class="page-heading">
+    <h2>Help &amp; Support</h2>
+    <p>Common questions about using Xamlysis, and where to go for anything else.</p>
+  </div>
+
+  <div class="feature-grid">
+    <article class="feature-card">
+      <div>
+        <h3>How do I register for an exam?</h3>
+        <p>
+          Open <a href="/student_exams_scheduled/">Scheduled Exams</a> and press
+          <strong>Register</strong> on the exam you want. You must be in the right class
+          and enrolled in the course for it to appear.
+        </p>
+      </div>
+    </article>
+
+    <article class="feature-card">
+      <div>
+        <h3>Why can't I see any exams?</h3>
+        <p>
+          Check that you have <a href="/class_select/">selected your class</a> and
+          <a href="/course_select">enrolled in your courses</a>. Exams are only shown to
+          students whose class and course both match.
+        </p>
+      </div>
+    </article>
+
+    <article class="feature-card">
+      <div>
+        <h3>How is my score calculated?</h3>
+        <p>
+          Each question carries its own marks. Your total is the sum of the marks for
+          correct answers, and the percentage is that total against the exam's maximum.
+        </p>
+      </div>
+    </article>
+
+    <article class="feature-card">
+      <div>
+        <h3>Can I review my answers?</h3>
+        <p>
+          Yes. On <a href="/student_previous_exams/">Previous Exams</a>, press
+          <strong>View</strong> on any completed exam to see each question with your
+          answer and the correct one.
+        </p>
+      </div>
+    </article>
+
+    <article class="feature-card">
+      <div>
+        <h3>How do I schedule an exam?</h3>
+        <p>
+          Teachers can create an exam from <a href="/exam_detail">Create Exam</a>, then
+          add questions through <a href="/ques_setup">Question Setup</a> until the paper
+          is complete.
+        </p>
+      </div>
+    </article>
+
+    <article class="feature-card">
+      <div>
+        <h3>Something else?</h3>
+        <p>
+          Send your question straight to the teacher through
+          <a href="/query_page/">Raise A Query</a>, or update your contact details in
+          <a href="/change_setting/">Settings</a>.
+        </p>
+      </div>
+    </article>
+  </div>
+
+  <div class="alert alert-info mt-4">
+    <strong>Note:</strong> the live chat assistant is not enabled. Django Channels is
+    commented out of <code>INSTALLED_APPS</code>, so the WebSocket consumer in
+    <code>database/consumers.py</code> is inert. This page answers the common questions
+    in the meantime.
+  </div>
+</section>
+{% endblock body %}

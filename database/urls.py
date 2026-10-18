@@ -5,6 +5,11 @@ from django.contrib import admin
 urlpatterns = [
     path('', views.home , name="home"),
     path('about/' , views.about , name='about'),
+    path('features/' , views.features , name='features'),
+    path('how_it_works/' , views.how_it_works , name='how_it_works'),
+    path('faq/' , views.faq , name='faq'),
+    path('contact/' , views.contact , name='contact'),
+    path('courses/' , views.courses , name='courses'),
     path('change_setting/' , views.change_setting , name='change_setting'),
     path('chat_bot/' ,views.chat_bot , name='chat_bot'),
     path('login' , views.login , name='login' ),

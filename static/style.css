@@ -573,3 +573,469 @@ button[type="submit"]:hover {
     flex-direction: column;
   }
 }
+
+/* ---------------------------------------------------------------
+   Status pills, list/empty states and form notes.
+   Used by the exam schedule, results and sign-in pages.
+   --------------------------------------------------------------- */
+
+.status-pill {
+  display: inline-block;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.status-pass {
+  color: #0f5d55;
+  background: rgba(27, 153, 139, 0.16);
+}
+
+.status-fail {
+  color: #8f2727;
+  background: rgba(214, 69, 69, 0.14);
+}
+
+.status-warn {
+  color: #8a5212;
+  background: rgba(244, 162, 97, 0.22);
+}
+
+.exam-list {
+  display: grid;
+  gap: 1rem;
+  margin: 1.5rem 0 3rem;
+}
+
+.exam-list .exam-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.35rem 1.5rem;
+}
+
+.exam-card-main {
+  min-width: 0;
+}
+
+.exam-card-main h3 {
+  margin-bottom: 0.15rem;
+}
+
+.exam-code {
+  margin-bottom: 0.75rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.exam-list .exam-meta {
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  margin: 0;
+}
+
+.exam-list .exam-meta strong {
+  display: block;
+  color: var(--ink);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.exam-card-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.empty-state {
+  padding: 3rem 1.5rem;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-soft);
+  text-align: center;
+}
+
+.empty-state h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.empty-state p {
+  max-width: 34rem;
+  margin: 0 auto;
+  color: var(--muted);
+}
+
+.empty-cell {
+  padding: 2.25rem 1rem;
+  color: var(--muted);
+}
+
+.form-footnote {
+  margin: 1.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.invalid-note {
+  margin-top: 0.4rem;
+  color: var(--danger);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .exam-list .exam-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .exam-card-action {
+    align-items: stretch;
+  }
+}
+
+/* ---------------------------------------------------------------
+   Content pages: landing sections, features, how-it-works,
+   courses, FAQ and contact.
+   --------------------------------------------------------------- */
+
+.eyebrow {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.page-intro {
+  padding-top: 2.5rem;
+}
+
+.page-intro .page-heading {
+  max-width: 44rem;
+}
+
+.hero-note {
+  margin-top: 1.1rem;
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Numbered steps -------------------------------------------------- */
+
+.step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.step-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0 2rem;
+}
+
+.step-card {
+  padding: 1.75rem 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.step-card h3 {
+  margin: 1rem 0 0.5rem;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.step-card p {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.step-list {
+  margin: 1.5rem 0 3rem;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 1rem;
+}
+
+.step-item {
+  display: flex;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.step-item h3 {
+  margin-bottom: 0.4rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.step-item p {
+  margin-bottom: 0.5rem;
+  color: var(--muted);
+}
+
+/* Split content blocks -------------------------------------------- */
+
+.split-section {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  align-items: center;
+  gap: 3rem;
+  margin: 2rem 0 3.5rem;
+}
+
+.split-section.reversed .split-copy {
+  order: 2;
+}
+
+.split-copy h2 {
+  margin-bottom: 0.85rem;
+  font-size: 1.75rem;
+  font-weight: 800;
+}
+
+.split-copy > p {
+  color: var(--muted);
+}
+
+.split-media img {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+}
+
+.tick-list {
+  margin: 1.25rem 0 1.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.tick-list li {
+  position: relative;
+  padding: 0.4rem 0 0.4rem 1.75rem;
+  color: var(--muted);
+}
+
+.tick-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.95rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--success);
+}
+
+/* Course catalogue ------------------------------------------------ */
+
+.course-code {
+  display: inline-block;
+  margin-bottom: 0.6rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  background: var(--panel-soft);
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.course-stats {
+  display: flex;
+  gap: 1.25rem;
+  margin: 0.75rem 0 1.25rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.course-stats strong {
+  color: var(--ink);
+}
+
+/* FAQ ------------------------------------------------------------- */
+
+.faq-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1.5rem 0 3rem;
+}
+
+.faq-item {
+  padding: 1.1rem 1.35rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.faq-item summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--ink);
+  list-style: none;
+  position: relative;
+  padding-right: 2rem;
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-item summary::after {
+  content: "+";
+  position: absolute;
+  right: 0;
+  top: -0.15rem;
+  color: var(--accent);
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.faq-item[open] summary::after {
+  content: "\2212";
+}
+
+.faq-item[open] summary {
+  margin-bottom: 0.7rem;
+}
+
+.faq-item p {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+/* Contact --------------------------------------------------------- */
+
+.contact-layout {
+  display: grid;
+  grid-template-columns: 1.4fr 0.9fr;
+  align-items: start;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.contact-aside {
+  display: grid;
+  gap: 1rem;
+}
+
+.contact-line {
+  margin-bottom: 0.85rem;
+  color: var(--muted);
+}
+
+.contact-line strong {
+  color: var(--ink);
+}
+
+/* Closing call to action ------------------------------------------ */
+
+.cta-panel {
+  margin: 1rem 0 3.5rem;
+  padding: 3rem 2rem;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--accent-strong) 0%, var(--accent) 100%);
+  box-shadow: var(--shadow);
+  color: #fff;
+  text-align: center;
+}
+
+.cta-panel h2 {
+  margin-bottom: 0.6rem;
+  font-size: 1.85rem;
+  font-weight: 800;
+}
+
+.cta-panel p {
+  max-width: 36rem;
+  margin: 0 auto 1.5rem;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.cta-panel .hero-actions {
+  justify-content: center;
+}
+
+.cta-panel .btn-primary {
+  background: #fff;
+  border-color: #fff;
+  color: var(--accent-strong);
+}
+
+.cta-panel .btn-primary:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.9);
+  color: var(--accent-strong);
+}
+
+.cta-panel .btn-outline-primary {
+  border-color: rgba(255, 255, 255, 0.75);
+  color: #fff;
+}
+
+.cta-panel .btn-outline-primary:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: #fff;
+  color: #fff;
+}
+
+@media (max-width: 900px) {
+  .split-section,
+  .contact-layout {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+  }
+
+  .split-section.reversed .split-copy {
+    order: 0;
+  }
+}
+
+@media (max-width: 576px) {
+  .step-item {
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+
+  .cta-panel {
+    padding: 2.25rem 1.25rem;
+  }
+
+  .course-stats {
+    gap: 0.9rem;
+  }
+}

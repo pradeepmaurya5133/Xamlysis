@@ -1,0 +1,63 @@
+{% extends 'base1.html' %}
+
+{% block title %}Upcoming Exams{% endblock title %}
+
+{% block body %}
+<section class="page-shell">
+  <div class="page-heading">
+    <h2>Upcoming Exams</h2>
+    <p>Exams you have scheduled that have not run yet, with registration and question-paper status.</p>
+  </div>
+
+  <div class="table-panel">
+    <div class="table-panel-header">Scheduled</div>
+    <div class="table-panel-scroll">
+      <table class="table text-center">
+        <thead>
+          <tr>
+            <th>Exam Code</th>
+            <th>Title</th>
+            <th>Date</th>
+            <th>Start</th>
+            <th>Class</th>
+            <th>Registered</th>
+            <th>Questions</th>
+            <th>Paper</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td>{{ r.exam.exam_code }}</td>
+            <td>{{ r.exam.exam_title }}</td>
+            <td>{{ r.exam.date }}</td>
+            <td>{{ r.exam.start_time }}</td>
+            <td>{{ r.exam.class_stu }}</td>
+            <td>{{ r.registered }}</td>
+            <td>{{ r.questions }} / {{ r.exam.no_of_ques }}</td>
+            <td>
+              {% if r.questions >= r.exam.no_of_ques %}
+              <span class="status-pill status-pass">Ready</span>
+              {% else %}
+              <span class="status-pill status-warn">Incomplete</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="empty-cell">
+              You have no upcoming exams. <a href="/exam_detail">Schedule one</a>.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="hero-actions mt-4">
+    <a class="btn btn-primary" href="/exam_detail">Schedule An Exam</a>
+    <a class="btn btn-outline-primary" href="/teachers_previous_exams_scheduled/">View Past Exams</a>
+  </div>
+</section>
+{% endblock body %}

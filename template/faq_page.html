@@ -1,0 +1,110 @@
+{% extends 'base1.html' %}
+
+{% block title %}FAQ{% endblock title %}
+
+{% block body %}
+<section class="page-shell page-intro">
+  <div class="page-heading">
+    <span class="eyebrow">FAQ</span>
+    <h1>Frequently Asked Questions</h1>
+    <p>Answers to what people ask most. If yours is not here, the contact page will reach us.</p>
+  </div>
+</section>
+
+<section class="page-shell">
+  <div class="page-heading">
+    <h2>Accounts</h2>
+  </div>
+  <div class="faq-list">
+    <details class="faq-item">
+      <summary>What do I use as my username?</summary>
+      <p>Your email address. Xamlysis keys accounts on email rather than a separate username, so that is what you enter on the login page.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Can one account be both a student and a teacher?</summary>
+      <p>No. Each account holds a single role, fixed when you register. If you need both, register two accounts with different email addresses.</p>
+    </details>
+    <details class="faq-item">
+      <summary>How do I change my mobile number?</summary>
+      <p>Open <a href="/change_setting/">Settings</a> from your dashboard and update it there. It is the one profile field editable from the portal itself.</p>
+    </details>
+  </div>
+
+  <div class="page-heading">
+    <h2>Exams</h2>
+  </div>
+  <div class="faq-list">
+    <details class="faq-item">
+      <summary>Why can I not see any exams?</summary>
+      <p>
+        An exam reaches you only when two things match: the class on the exam equals
+        your class, and you are enrolled in the exam's course. Check both in
+        <a href="/class_select/">Classes</a> and <a href="/course_select">Courses</a>.
+      </p>
+    </details>
+    <details class="faq-item">
+      <summary>Do I have to register before an exam?</summary>
+      <p>Yes. Registering tells the portal to prepare the paper for you. Register from your scheduled exams list any time before the exam date.</p>
+    </details>
+    <details class="faq-item">
+      <summary>What happens if I run out of time?</summary>
+      <p>The attempt carries the duration set by your teacher. Answer what you can within it — unanswered questions simply score zero rather than invalidating the attempt.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Are the questions always in the same order?</summary>
+      <p>No. Question order is shuffled for each attempt, so two students sitting side by side will not see the same sequence.</p>
+    </details>
+  </div>
+
+  <div class="page-heading">
+    <h2>Scoring</h2>
+  </div>
+  <div class="faq-list">
+    <details class="faq-item">
+      <summary>How is my score calculated?</summary>
+      <p>Every question carries its own marks. Your total is the sum of the marks for the questions you answered correctly, and your percentage is that total against the exam's maximum.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Is there negative marking?</summary>
+      <p>No. A wrong answer scores zero for that question; nothing is deducted from your total.</p>
+    </details>
+    <details class="faq-item">
+      <summary>When do I get my result?</summary>
+      <p>Immediately. Marks and percentage are calculated the moment you submit, and the exam moves into your previous exams list.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Can I see which questions I got wrong?</summary>
+      <p>Yes. On <a href="/student_previous_exams/">Previous Exams</a>, press View on any completed exam to see each question with your answer beside the correct one.</p>
+    </details>
+  </div>
+
+  <div class="page-heading">
+    <h2>Teaching</h2>
+  </div>
+  <div class="faq-list">
+    <details class="faq-item">
+      <summary>How do I know a paper is finished?</summary>
+      <p>Your upcoming exams list shows Ready once the number of authored questions reaches the question count you set, and Incomplete until then.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Can I see who registered?</summary>
+      <p>Yes. The upcoming exams view shows a registration count per exam, and your dashboard lists the individual students for an exam you select.</p>
+    </details>
+    <details class="faq-item">
+      <summary>How do students ask me something about an exam?</summary>
+      <p>Through <a href="/query_page/">Raise A Query</a>. The query is stored against the exam it was raised from, so the context travels with it.</p>
+    </details>
+  </div>
+</section>
+
+<section class="page-shell">
+  <div class="cta-panel">
+    <h2>Did Not Find It?</h2>
+    <p>Send the question over and we will get back to you.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary btn-lg" href="/contact/">Contact Us</a>
+      <a class="btn btn-outline-primary btn-lg" href="/how_it_works/">How It Works</a>
+    </div>
+  </div>
+</section>
+{% endblock body %}

@@ -1,0 +1,119 @@
+{% extends 'base1.html' %}
+
+{% block title %}How It Works{% endblock title %}
+
+{% block body %}
+<section class="page-shell page-intro">
+  <div class="page-heading">
+    <span class="eyebrow">How It Works</span>
+    <h1>From Sign Up To Score</h1>
+    <p>
+      Two short paths — one for students, one for teachers. Pick yours and follow
+      the steps in order; each one takes a minute or two.
+    </p>
+  </div>
+</section>
+
+<section class="page-shell">
+  <div class="page-heading">
+    <h2>If You Are A Student</h2>
+    <p>Five steps from a new account to a graded result.</p>
+  </div>
+
+  <ol class="step-list">
+    <li class="step-item">
+      <span class="step-number">1</span>
+      <div>
+        <h3>Create your account</h3>
+        <p>Register with your email address and pick the student role. Your email is your username everywhere in the portal.</p>
+        <a href="/sign_up/">Create an account</a>
+      </div>
+    </li>
+    <li class="step-item">
+      <span class="step-number">2</span>
+      <div>
+        <h3>Choose your class</h3>
+        <p>Select the class you are in, from 1 to 12. Exams are scoped by class, so this decides which papers can reach you.</p>
+        <a href="/class_select/">Select a class</a>
+      </div>
+    </li>
+    <li class="step-item">
+      <span class="step-number">3</span>
+      <div>
+        <h3>Enrol in your courses</h3>
+        <p>Add each subject you study. An exam only appears when its course is one you are enrolled in and its class matches yours.</p>
+        <a href="/course_select">Enrol in courses</a>
+      </div>
+    </li>
+    <li class="step-item">
+      <span class="step-number">4</span>
+      <div>
+        <h3>Register for an exam</h3>
+        <p>Open your scheduled exams and register for the ones you intend to sit. Do this before the exam date so the paper is ready for you.</p>
+        <a href="/student_exams_scheduled/">See scheduled exams</a>
+      </div>
+    </li>
+    <li class="step-item">
+      <span class="step-number">5</span>
+      <div>
+        <h3>Attempt and review</h3>
+        <p>On the day, start the exam from your dashboard. Submit when finished and your marks and percentage appear immediately — then review each answer against the correct one.</p>
+        <a href="/student_previous_exams/">See past results</a>
+      </div>
+    </li>
+  </ol>
+</section>
+
+<section class="page-shell">
+  <div class="page-heading">
+    <h2>If You Are A Teacher</h2>
+    <p>Four steps from an empty schedule to a graded class.</p>
+  </div>
+
+  <ol class="step-list">
+    <li class="step-item">
+      <span class="step-number">1</span>
+      <div>
+        <h3>Create your account</h3>
+        <p>Register with your email address and pick the teacher role. You will land on a dashboard built around scheduling rather than attempting.</p>
+        <a href="/sign_up/">Create an account</a>
+      </div>
+    </li>
+    <li class="step-item">
+      <span class="step-number">2</span>
+      <div>
+        <h3>Schedule the exam</h3>
+        <p>Set the code, title, date, start time, duration, question count and maximum marks, then attach it to a course and a class.</p>
+        <a href="/exam_detail">Schedule an exam</a>
+      </div>
+    </li>
+    <li class="step-item">
+      <span class="step-number">3</span>
+      <div>
+        <h3>Author the question paper</h3>
+        <p>Straight after scheduling, add each question with four options, mark which one is correct, and give it a mark value. Your schedule shows Ready once the paper is complete.</p>
+        <a href="/exam_detail">Start a paper</a>
+      </div>
+    </li>
+    <li class="step-item">
+      <span class="step-number">4</span>
+      <div>
+        <h3>Watch the results come in</h3>
+        <p>Track registrations before the day, then review attempts, averages, and the highest and lowest scores once the exam has run.</p>
+        <a href="/teachers_schedule/">View your timetable</a>
+      </div>
+    </li>
+  </ol>
+</section>
+
+<section class="page-shell">
+  <div class="cta-panel">
+    <h2>Still Have A Question?</h2>
+    <p>The FAQ covers scoring, registration and the things that most often trip people up.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary btn-lg" href="/faq/">Read The FAQ</a>
+      <a class="btn btn-outline-primary btn-lg" href="/contact/">Contact Us</a>
+    </div>
+  </div>
+</section>
+{% endblock body %}
