@@ -1,0 +1,17 @@
+{
+  "services": {
+    "xamlysis": {
+      "root": ".",
+      "buildCommand": "./build.sh"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": {
+        "type": "service",
+        "service": "xamlysis"
+      }
+    }
+  ]
+}
