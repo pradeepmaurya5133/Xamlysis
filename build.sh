@@ -15,6 +15,8 @@ python manage.py collectstatic --no-input
 if [ -n "$DJANGO_ADMIN_PASSWORD" ]; then
   python manage.py bootstrap_deploy
   python manage.py seed_exams
+  # Only does anything if the seed_demo exams are present; skips them otherwise.
+  python manage.py topup_exams
 else
   echo "DJANGO_ADMIN_PASSWORD is not set: skipping the admin account."
   echo "Exams need a teacher to own them, so seed_exams is skipped too."
