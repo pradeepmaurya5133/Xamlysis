@@ -24,15 +24,22 @@ SECRET_KEY = os.environ.get(
     'django-insecure-3yw+ybibo7m^w)172rl1^ek+f%@p!l$%dt30f&dsn!y_fmcs53',
 )
 
-# SECURITY WARNING: don't run with debug turned on in production!
-# On Vercel DEBUG stays off unless DJANGO_DEBUG is explicitly set to "1".
-DEBUG = os.environ.get('DJANGO_DEBUG', '0' if os.environ.get('VERCEL') else '1') == '1'
+# True only for local development. Any recognised hosting platform turns it off,
+# so a missing DJANGO_DEBUG can never leave a deployed site in debug mode.
+ON_PLATFORM = any(os.environ.get(v) for v in ('RENDER', 'VERCEL', 'DYNO'))
+DEBUG = os.environ.get('DJANGO_DEBUG', '0' if ON_PLATFORM else '1') == '1'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.vercel.app']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.onrender.com', '.vercel.app']
+# Render publishes the service's own hostname; add it so a custom domain or a
+# renamed service keeps working without editing this file.
+if os.environ.get('RENDER_EXTERNAL_HOSTNAME'):
+    ALLOWED_HOSTS.append(os.environ['RENDER_EXTERNAL_HOSTNAME'])
 ALLOWED_HOSTS += [h for h in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',') if h]
 
-# Vercel terminates TLS in front of the app and serves it over https.
-CSRF_TRUSTED_ORIGINS = ['https://*.vercel.app']
+# Both platforms terminate TLS in front of the app and serve it over https.
+CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com', 'https://*.vercel.app']
+if os.environ.get('RENDER_EXTERNAL_HOSTNAME'):
+    CSRF_TRUSTED_ORIGINS.append('https://%s' % os.environ['RENDER_EXTERNAL_HOSTNAME'])
 CSRF_TRUSTED_ORIGINS += [
     o for o in os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',') if o
 ]
