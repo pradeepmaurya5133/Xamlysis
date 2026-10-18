@@ -2,6 +2,8 @@
   "services": {
     "xamlysis": {
       "root": ".",
+      "runtime": "python",
+      "entrypoint": "Online_Exam_Portal_Xamlysis/wsgi.py",
       "buildCommand": "./build.sh"
     }
   },

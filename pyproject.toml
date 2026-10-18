@@ -1,0 +1,17 @@
+[project]
+name = "xamlysis"
+version = "1.0.0"
+description = "Online examination portal built with Django"
+# 3.12 is what the deployment platform runs, and the project also works on
+# newer interpreters, so the range stays open rather than pinning one version.
+# Without this file the build generates one from whichever interpreter happens
+# to be running, which then conflicts with .python-version.
+requires-python = ">=3.12"
+dependencies = [
+    "dj-database-url==3.1.2",
+    "django==5.2.18",
+    "djangorestframework==3.18.3",
+    "whitenoise==6.12.0",
+    "psycopg2-binary==2.9.13",
+    "gunicorn==23.0.0",
+]
