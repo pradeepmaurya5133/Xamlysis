@@ -71,9 +71,18 @@ INSTALLED_APPS = [
     'rest_framework',
 ]
 
+# WhiteNoise is how the app serves its own static files, but a build or host
+# that has not installed it must not break: without this guard Django raises
+# InvalidStorageError and even collectstatic fails, taking the whole build down.
+try:
+    import whitenoise  # noqa: F401
+
+    HAS_WHITENOISE = True
+except ImportError:
+    HAS_WHITENOISE = False
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -122,7 +131,16 @@ elif os.environ.get('DATABASE_URL'):
     # Managed Postgres (Vercel Postgres, Neon, Supabase, ...). Required for any
     # serverless deployment: the filesystem there is read-only apart from /tmp,
     # which is wiped between invocations, so SQLite cannot store anything.
-    import dj_database_url
+    try:
+        import dj_database_url
+    except ImportError as exc:
+        from django.core.exceptions import ImproperlyConfigured
+
+        raise ImproperlyConfigured(
+            'DATABASE_URL is set but dj-database-url is not installed. '
+            'Install the project requirements, or unset DATABASE_URL to use '
+            'SQLite.'
+        ) from exc
 
     DATABASES = {
         'default': dj_database_url.config(
@@ -195,14 +213,23 @@ STATICFILES_DIRS = [
 # directly, which keeps it working whether or not collectstatic has been run.
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 WHITENOISE_USE_FINDERS = True
+
 STORAGES = {
     'default': {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',
     },
     'staticfiles': {
-        'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
     },
 }
+
+if HAS_WHITENOISE:
+    # Insert directly after SecurityMiddleware, which is where WhiteNoise
+    # expects to sit so it can answer static requests before anything else.
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+    STORAGES['staticfiles']['BACKEND'] = (
+        'whitenoise.storage.CompressedStaticFilesStorage'
+    )
 
 MESSAGE_TAGS = {
     messages.INFO: '',

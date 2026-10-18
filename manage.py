@@ -13,15 +13,37 @@ def venv_python():
     return path if os.path.exists(path) else None
 
 
-def reexec_in_venv():
-    """Re-run this command under .venv whenever we are not already in it.
+def dependencies_importable():
+    """True when this interpreter can import everything settings.py needs.
 
-    The project's dependencies live in .venv, so a global interpreter may have
-    some of them (Django) and not others (rest_framework, PIL) and fail halfway
-    through startup. Switching unconditionally avoids guessing which.
+    An interpreter may carry some of them and not others, which fails part way
+    through startup, so check the whole set rather than just Django.
     """
+    import importlib.util
+
+    for module in ('django', 'rest_framework', 'whitenoise'):
+        if importlib.util.find_spec(module) is None:
+            return False
+    return True
+
+
+def reexec_in_venv():
+    """Re-run this command under .venv when the current interpreter cannot.
+
+    Only switches when something settings.py imports is missing here, so a
+    build or hosting platform running manage.py with its own prepared
+    interpreter is never hijacked, even if a .venv directory happens to be
+    present in the project root.
+    """
+    if os.environ.get('XAMLYSIS_NO_REEXEC'):
+        return
+    # Hosting platforms prepare their own environment; never second guess it.
+    if any(os.environ.get(v) for v in ('RENDER', 'VERCEL', 'DYNO', 'CI')):
+        return
+    if dependencies_importable():
+        return
     target = venv_python()
-    if not target or os.environ.get('XAMLYSIS_NO_REEXEC'):
+    if not target:
         return
     if os.path.normcase(target) == os.path.normcase(os.path.abspath(sys.executable)):
         return
