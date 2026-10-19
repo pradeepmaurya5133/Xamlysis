@@ -11,7 +11,10 @@
         {% if total != grand_total %}(of {{ grand_total }} in total){% endif %}
       </p>
     </div>
-    <a class="btn btn-primary" href="{% url 'question_create' %}">New question</a>
+    <span>
+      <a class="btn btn-outline-secondary" href="{% url 'question_import' %}">Import CSV</a>
+      <a class="btn btn-primary" href="{% url 'question_create' %}">New question</a>
+    </span>
   </header>
 
   <form method="get" class="action-card mb-4">

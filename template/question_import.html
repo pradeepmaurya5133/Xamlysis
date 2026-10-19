@@ -1,0 +1,119 @@
+{% extends 'base1.html' %}
+{% block title %}Import questions{% endblock title %}
+
+{% block body %}
+<section class="page-shell container">
+  <header class="mb-4 d-flex flex-wrap justify-content-between align-items-end" style="gap:1rem">
+    <div>
+      <h1 class="section-title mb-1">Import questions from CSV</h1>
+      <p class="text-muted mb-0">Nothing is saved until you confirm the preview.</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{% url 'question_bank' %}">Back to bank</a>
+  </header>
+
+  <article class="action-card mb-4">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="form-group mb-3">
+        <label for="{{ form.csv_file.id_for_label }}"><strong>{{ form.csv_file.label }}</strong></label>
+        {{ form.csv_file }}
+        <small class="form-text text-muted">{{ form.csv_file.help_text }}</small>
+        {% for error in form.csv_file.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+      </div>
+      <button class="btn btn-primary" type="submit">Upload and preview</button>
+    </form>
+
+    <hr>
+    <p class="text-muted small mb-2"><strong>Expected columns</strong></p>
+    <p class="small mb-1">Required: <code>{{ required|join:"</code>, <code>" }}</code></p>
+    <p class="small mb-3">Optional: <code>{{ optional|join:"</code>, <code>" }}</code></p>
+    <p class="small text-muted mb-0">
+      <code>correct</code> is 1&ndash;4. <code>difficulty</code> is easy, medium or hard
+      (defaults to medium). A <code>ques_id</code> that already exists is rejected,
+      never overwritten.
+    </p>
+  </article>
+
+  {% if previewed %}
+
+  <div class="import-summary mb-4">
+    <div class="import-stat ok">
+      <span class="n">{{ valid|length }}</span>
+      <span class="l">Ready to import</span>
+    </div>
+    <div class="import-stat {% if errors %}bad{% endif %}">
+      <span class="n">{{ errors|length }}</span>
+      <span class="l">Row{{ errors|length|pluralize }} with errors</span>
+    </div>
+  </div>
+
+  {% if errors %}
+  <article class="action-card mb-4">
+    <h2 class="h5 mb-3">Rows that will be skipped</h2>
+    <div class="table-responsive">
+      <table class="table mb-0">
+        <thead><tr><th style="width:5rem">Row</th><th style="width:12rem">ques_id</th><th>Problem</th></tr></thead>
+        <tbody>
+          {% for e in error_preview %}
+          <tr>
+            <td>{{ e.row }}</td>
+            <td class="small">{{ e.ques_id|default:"—" }}</td>
+            <td class="small text-danger">
+              {% for p in e.problems %}{{ p }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if errors|length > 20 %}
+    <p class="text-muted small mt-2 mb-0">Showing the first 20 of {{ errors|length }} problem rows.</p>
+    {% endif %}
+  </article>
+  {% endif %}
+
+  {% if valid %}
+  <article class="action-card">
+    <h2 class="h5 mb-3">Preview of what will be created</h2>
+    <div class="table-responsive">
+      <table class="table mb-0">
+        <thead>
+          <tr><th>Row</th><th>ques_id</th><th>Exam</th><th>Question</th>
+              <th>Correct</th><th class="text-right">Marks</th><th>Difficulty</th></tr>
+        </thead>
+        <tbody>
+          {% for r in valid_preview %}
+          <tr>
+            <td class="small">{{ r.row }}</td>
+            <td class="small">{{ r.ques_id }}</td>
+            <td class="small">{{ r.exam_code }}</td>
+            <td class="small">{{ r.ques|truncatechars:60 }}</td>
+            <td class="small">Option {{ r.correct }}</td>
+            <td class="text-right small">{{ r.marks }}</td>
+            <td><span class="badge-type badge-{{ r.difficulty }}">{{ r.difficulty }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if valid|length > 20 %}
+    <p class="text-muted small mt-2">Showing the first 20 of {{ valid|length }} rows to be imported.</p>
+    {% endif %}
+
+    <form method="post" action="{% url 'question_import_confirm' %}" class="mt-3">
+      {% csrf_token %}
+      <button class="btn btn-primary" type="submit">
+        Import {{ valid|length }} question{{ valid|length|pluralize }}
+      </button>
+      <a class="btn btn-outline-secondary" href="{% url 'question_import' %}">Cancel</a>
+    </form>
+  </article>
+  {% else %}
+  <article class="action-card">
+    <p class="mb-0">No valid rows to import. Fix the problems above and upload the file again.</p>
+  </article>
+  {% endif %}
+
+  {% endif %}
+</section>
+{% endblock body %}

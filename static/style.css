@@ -1193,3 +1193,12 @@ button[type="submit"]:hover {
 .opt-letter { display: inline-flex; align-items: center; justify-content: center; width: 1.6rem; height: 1.6rem; margin-right: .6rem; border-radius: 50%; background: #eef2f7; font-weight: 700; font-size: .8rem; }
 @media (max-width: 860px) { .qb-filters { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) { .qb-filters { grid-template-columns: 1fr; } }
+
+/* CSV import summary */
+.import-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 220px)); gap: 1rem; }
+.import-stat { padding: 1rem 1.2rem; border: 1px solid #e3e8ef; border-left-width: 4px; border-radius: 10px; background: #fff; }
+.import-stat .n { display: block; font-size: 1.7rem; font-weight: 800; line-height: 1.1; }
+.import-stat .l { font-size: .76rem; text-transform: uppercase; letter-spacing: .05em; color: #64748b; }
+.import-stat.ok { border-left-color: #16a34a; }
+.import-stat.bad { border-left-color: #b91c1c; }
+@media (max-width: 520px) { .import-summary { grid-template-columns: 1fr; } }

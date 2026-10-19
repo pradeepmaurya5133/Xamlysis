@@ -2,6 +2,7 @@ from django.urls import path
 from database import views
 from database import exam_views
 from database import question_bank
+from database import csv_import
 from django.contrib import admin
 
 urlpatterns = [
@@ -66,6 +67,8 @@ urlpatterns = [
     # Staff question bank.
     path('staff/questions/', question_bank.question_bank, name='question_bank'),
     path('staff/questions/new/', question_bank.question_create, name='question_create'),
+    path('staff/questions/import/', csv_import.question_import, name='question_import'),
+    path('staff/questions/import/confirm/', csv_import.question_import_confirm, name='question_import_confirm'),
     path('staff/questions/<str:ques_id>/', question_bank.question_preview, name='question_preview'),
     path('staff/questions/<str:ques_id>/edit/', question_bank.question_edit, name='question_edit'),
     path('exams/', exam_views.exam_catalogue, name='exam_catalogue'),
