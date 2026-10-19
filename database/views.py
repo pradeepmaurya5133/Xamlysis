@@ -258,22 +258,29 @@ def stu_home(request):
         regi.save()
         return redirect('stu_home')
 
+    # A student may belong to no class (the state of every new sign-up) or to
+    # several, because /class_select/ lets them join more than one. get() raised
+    # DoesNotExist in the first case and MultipleObjectsReturned in the second,
+    # so this page only ever worked for a student in exactly one class. Read the
+    # classes as a list and treat "no class yet" as an empty dashboard.
+    student_classes = list(
+        CST.objects.filter(email_id=current_user.email_id)
+        .values_list('class_stu_tech', flat=True)
+    )
     if(current_user.role_id.role_id==2):
-        stud_data = CST.objects.get(email_id=current_user.email_id,)
+        stud_data = CST.objects.filter(email_id=current_user.email_id,).first()
     else:
         stud_data = CST.objects.filter(email_id=current_user.email_id,)
-    #print(stud_data)
 
-    all=[]  
+    all=[]
     if(current_user.role_id.role_id==2):
-        all=[stud_data.class_stu_tech]
+        all=[c for c in student_classes]
     else:
         [all.append(str(x.class_stu_tech)) for x in stud_data]
-    
+
     exam_data = exam_details.objects.all()
     if(current_user.role_id==2):
-        exam_data = exam_details.objects.filter(class_stu=stud_data.class_stu_tech)
-    #print(exam_data)
+        exam_data = exam_details.objects.filter(class_stu__in=student_classes)
     availed_courses = courses_availed.objects.filter(email_id=current_user.email_id,)
     ac=[]
     [ac.append(str(x.course_id)) for x in availed_courses]
@@ -286,7 +293,8 @@ def stu_home(request):
     exams=[]
     if current_user.role_id.role_id==2:
         for s in exam_data:
-            if (s.course_id_id in acc and s.class_stu==stud_data.class_stu_tech ):
+            # Match against every class the student is in, not a single row.
+            if (s.course_id_id in acc and s.class_stu in student_classes):
                 #print(s.class_stu , stud_data.class_stu_tech , "HELLO\n" )
                 exams.append(s)
 

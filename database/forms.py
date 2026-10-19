@@ -8,15 +8,31 @@ class_stu=[tuple([x,x]) for x in range(1,13)]
 role_id=[tuple([1,"    TEACHER    "]) , tuple([2,"    STUDENT    "])]
 
 class MyUserCreationForm(UserCreationForm):
-    #role_id= forms.ChoiceField(choices=role_id)
-    #email_id = forms.EmailField(max_length=200 )
-    
+    """Public sign-up. Always creates a student.
+
+    role_id is deliberately not a field here. It used to be, and because this
+    form backs the public /temp_sign_up page, anyone could register choosing
+    the TEACHER role and immediately reach the question bank, every answer key,
+    exam creation and the analytics pages. Teacher accounts are created by an
+    administrator instead, through the Django admin.
+    """
+
+    STUDENT_ROLE = 2
+
     class Meta(UserCreationForm):
         model = User
-        fields = ('role_id' ,'email_id', 'username' , 'first_name' , 'last_name','mobile_no' ,)
-        #widgets={
-        #    'email_id' : forms.EmailInput(attrs={'class':'form-control'}),
-        #}
+        fields = ('email_id', 'username', 'first_name', 'last_name', 'mobile_no',)
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        # Set on the instance rather than trusted from the request, so a crafted
+        # POST cannot grant itself the teacher role.
+        user.role_id_id = self.STUDENT_ROLE
+        user.is_staff = False
+        user.is_superuser = False
+        if commit:
+            user.save()
+        return user
 
 class MyUserChangeForm(UserChangeForm):
 
