@@ -1,0 +1,151 @@
+{% extends 'base1.html' %}
+{% block title %}Dashboard{% endblock title %}
+
+{% block body %}
+<section class="page-shell container dash">
+  <header class="mb-4">
+    <h1 class="section-title">Welcome back, {{ user.first_name|default:user.username }}</h1>
+    <p class="text-muted mb-0">
+      {% if my_classes %}Class {{ my_classes|join:" and " }}.{% endif %}
+      <a href="{% url 'exam_catalogue' %}">Browse all exams</a> &middot;
+      <a href="{% url 'exam_history' %}">Full history</a>
+    </p>
+  </header>
+
+  <!-- summary -->
+  <div class="dash-stats mb-4">
+    <div class="dash-stat"><span class="n">{{ stats.attempted }}</span><span class="l">Exams taken</span></div>
+    <div class="dash-stat"><span class="n">{{ stats.passed }}</span><span class="l">Passed</span></div>
+    <div class="dash-stat"><span class="n">{{ stats.average }}%</span><span class="l">Average</span></div>
+    <div class="dash-stat"><span class="n">{{ stats.best }}%</span><span class="l">Best</span></div>
+  </div>
+
+  <!-- unfinished attempts -->
+  {% if in_progress %}
+  <article class="action-card mb-4">
+    <h2 class="h5 mb-3">Unfinished attempts</h2>
+    {% for a in in_progress %}
+    <div class="dash-row">
+      <div>
+        <strong>{{ a.exam.exam_title }}</strong>
+        <div class="text-muted small">
+          {{ a.exam.course_id.course_name }} &middot; attempt {{ a.attempt_no }} &middot;
+          started {{ a.started_at|date:"d M, H:i" }}
+        </div>
+      </div>
+      <div class="dash-actions">
+        {% if a.resumable %}
+          <span class="status-pill status-pill-live">In progress</span>
+          <a class="btn btn-sm btn-primary" href="{% url 'exam_take' a.pk %}">Resume</a>
+        {% else %}
+          <span class="status-pill">Expired</span>
+          <a class="btn btn-sm btn-outline-secondary" href="{% url 'exam_result' a.pk %}">View result</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </article>
+  {% endif %}
+
+  <!-- available now -->
+  <article class="action-card mb-4">
+    <h2 class="h5 mb-3">
+      Available now
+      {% if available_total > 12 %}<span class="text-muted small">showing 12 of {{ available_total }}</span>{% endif %}
+    </h2>
+    {% for row in available %}
+    <div class="dash-row">
+      <div>
+        <strong>{{ row.exam.exam_title }}</strong>
+        {% if row.is_practice %}
+          <span class="badge-type badge-practice">Practice</span>
+        {% else %}
+          <span class="badge-type badge-full">Full-length</span>
+        {% endif %}
+        {% if row.relevant %}<span class="badge-type badge-mine">Your class</span>{% endif %}
+        <div class="text-muted small">
+          {{ row.exam.course_id.course_name }} &middot; class {{ row.exam.class_stu }} &middot;
+          {{ row.exam.no_of_ques }} questions &middot; {{ row.exam.max_marks }} marks &middot;
+          {{ row.exam.duration }} &middot; pass {{ row.exam.pass_percentage }}%
+        </div>
+      </div>
+      <div class="dash-actions">
+        <span class="text-muted small">
+          {% if row.unlimited %}Unlimited attempts
+          {% else %}{{ row.attempts_left }} of {{ row.exam.max_attempts }} left{% endif %}
+        </span>
+        {% if row.open_attempt %}
+          <a class="btn btn-sm btn-primary" href="{% url 'exam_take' row.open_attempt.pk %}">Resume</a>
+        {% elif row.can_start %}
+          <a class="btn btn-sm btn-primary" href="{% url 'exam_start' row.exam.exam_code %}">
+            {% if row.attempts_used %}Retake{% else %}Start{% endif %}
+          </a>
+        {% else %}
+          <span class="status-pill">No attempts left</span>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <p class="text-muted mb-0">No exams are available right now. Check back soon.</p>
+    {% endfor %}
+  </article>
+
+  <!-- upcoming -->
+  {% if upcoming %}
+  <article class="action-card mb-4">
+    <h2 class="h5 mb-3">
+      Upcoming
+      {% if upcoming_total > 6 %}<span class="text-muted small">showing 6 of {{ upcoming_total }}</span>{% endif %}
+    </h2>
+    {% for row in upcoming %}
+    <div class="dash-row">
+      <div>
+        <strong>{{ row.exam.exam_title }}</strong>
+        {% if row.is_practice %}
+          <span class="badge-type badge-practice">Practice</span>
+        {% else %}
+          <span class="badge-type badge-full">Full-length</span>
+        {% endif %}
+        <div class="text-muted small">
+          {{ row.exam.course_id.course_name }} &middot; {{ row.exam.duration }} &middot;
+          {{ row.exam.no_of_ques }} questions
+        </div>
+      </div>
+      <div class="dash-actions">
+        <span class="status-pill">{{ row.exam.date|date:"d M Y" }} at {{ row.exam.start_time|time:"H:i" }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </article>
+  {% endif %}
+
+  <!-- recent results -->
+  <article class="action-card">
+    <h2 class="h5 mb-3">Recent results</h2>
+    {% for a in recent_results %}
+    <div class="dash-row">
+      <div>
+        <strong>{{ a.exam.exam_title }}</strong>
+        <div class="text-muted small">
+          {{ a.exam.course_id.course_name }} &middot; attempt {{ a.attempt_no }} &middot;
+          {{ a.submitted_at|date:"d M Y, H:i" }}
+          {% if a.auto_submitted %}&middot; auto-submitted{% endif %}
+        </div>
+      </div>
+      <div class="dash-actions">
+        <span class="dash-score">{{ a.score }}/{{ a.max_marks }}</span>
+        <span class="status-pill {% if a.passed %}status-pill-live{% endif %}">
+          {{ a.percentage }}% &middot; {% if a.passed %}Passed{% else %}Not passed{% endif %}
+        </span>
+        <a class="btn btn-sm btn-outline-secondary" href="{% url 'exam_result' a.pk %}">Review</a>
+      </div>
+    </div>
+    {% empty %}
+    <p class="text-muted mb-0">
+      You have not completed an exam yet.
+      <a href="{% url 'exam_catalogue' %}">Pick one to start</a>.
+    </p>
+    {% endfor %}
+  </article>
+</section>
+{% endblock body %}

@@ -507,3 +507,78 @@ class HistoryTests(ExamEngineTestCase):
         self.assertEqual(len(listed), 1)
         self.assertEqual(listed[0].pk, attempt.pk)
         self.assertEqual(response.context['passed'], 1)
+
+
+class ExamManagementAuthorizationTests(ExamEngineTestCase):
+    """Only exam staff may reach the exam-authoring views.
+
+    Before this was enforced, a logged-in student could POST to /exam_detail
+    and create an exam, and /exam_detail answered anonymous GETs with 200.
+    """
+
+    MANAGEMENT_URLS = [
+        '/teachers_home/',
+        '/teachers_schedule/',
+        '/teachers_future_exam_scheduled/',
+        '/teachers_previous_exams_scheduled/',
+        '/exam_detail',
+        '/ques_setup',
+    ]
+
+    def test_anonymous_users_are_sent_to_login(self):
+        for url in self.MANAGEMENT_URLS:
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, 302, url)
+                self.assertIn('/login', response.url, url)
+
+    def test_students_are_forbidden(self):
+        self.login_student()
+        for url in self.MANAGEMENT_URLS:
+            with self.subTest(url=url):
+                self.assertEqual(self.client.get(url).status_code, 403, url)
+
+    def test_student_cannot_create_an_exam(self):
+        """The exact escalation that was possible before."""
+        self.login_student()
+        before = exam_details.objects.count()
+        response = self.client.post('/exam_detail', {
+            'exam_code': 'ESCALATION-01', 'exam_title': 'Made by a student',
+            'date': '2026-12-01', 'start_time': '10:00', 'duration': '01:00:00',
+            'no_of_ques': '2', 'max_marks': '10',
+            'course_id': self.course.course_id, 'class_': '11',
+        })
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(exam_details.objects.count(), before)
+        self.assertFalse(exam_details.objects.filter(exam_code='ESCALATION-01').exists())
+
+    def test_student_cannot_author_questions(self):
+        self.login_student()
+        before = ques_table.objects.count()
+        response = self.client.post('/ques_setup', {
+            'ques': 'Injected?', 'option1': 'a', 'option2': 'b',
+            'option3': 'c', 'option4': 'd', 'correct': '1', 'marks': '5',
+        })
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(ques_table.objects.count(), before)
+
+    def test_teacher_role_is_allowed(self):
+        self.client.login(email_id=self.teacher.email_id, password=PASSWORD)
+        response = self.client.get('/exam_detail')
+        self.assertEqual(response.status_code, 200)
+
+    def test_django_staff_is_allowed(self):
+        staff = User.objects.create(
+            email_id='staff@test.local', username='staff',
+            role_id_id=2, is_staff=True)
+        staff.set_password(PASSWORD)
+        staff.save()
+        self.client.login(email_id=staff.email_id, password=PASSWORD)
+        self.assertEqual(self.client.get('/exam_detail').status_code, 200)
+
+    def test_students_keep_their_own_pages(self):
+        """The gate must not catch student-facing routes."""
+        self.login_student()
+        for url in ['/stu_home/', '/exams/', '/exams/history/', '/course_select/']:
+            with self.subTest(url=url):
+                self.assertEqual(self.client.get(url).status_code, 200, url)

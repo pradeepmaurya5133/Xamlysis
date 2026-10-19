@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth import login as auth_login, authenticate , logout as auth_logout
 from django.contrib.auth.decorators import login_required
+from database.permissions import staff_required
 import datetime
 try:
     import mysql.connector
@@ -450,7 +451,7 @@ def stu_sign_up(request):
     return render(request , 'stu_sign_up.html')
 
 
-@login_required
+@staff_required
 def teach_future(request):
     """Exams this teacher has scheduled that have not happened yet."""
     current_user = request.user
@@ -490,7 +491,7 @@ def teach_future(request):
 
 
 
-@login_required
+@staff_required
 def teach_home(request):
     current_user=request.user
     edobj=exam_details.objects.filter(email_id_id=current_user.email_id).values('exam_title' , 'exam_code', 'date' , 'max_marks' , 'duration' , 'start_time' ,'class_stu' ,)
@@ -760,7 +761,7 @@ def teach_login(request):
     return render(request , 'teach_login.html' , {'form':form})
 
 
-@login_required
+@staff_required
 def teach_prev(request):
     """Exams this teacher has already run, with aggregate student performance."""
     current_user = request.user
@@ -784,7 +785,7 @@ def teach_prev(request):
 
     return render(request , 'teach_prev.html' , {'rows': rows})
 
-@login_required
+@staff_required
 def teach_schedule(request):
     """Full timetable of this teacher's exams, split around today."""
     current_user = request.user
@@ -989,6 +990,7 @@ def test(request):
     return redirect('exam_start', exam_code=exam_code)
 
 
+@staff_required
 def correct_ans(request):
     exam_id1 = request.POST.get("course")
     current_user=request.user
@@ -1175,6 +1177,7 @@ def about(request):
 
 """
 
+@staff_required
 def exam_detail(request):
     if request.method == 'POST':
         #User.objects.get() 
@@ -1210,6 +1213,7 @@ def exam_detail(request):
     return render (request , 'stu_sign_up.html' ,{'form':form ,} )
 
 
+@staff_required
 def ques_setup(request):
     # Question authoring is the second half of the exam_detail flow and relies on
     # the session keys that view sets. Reaching this URL directly used to raise

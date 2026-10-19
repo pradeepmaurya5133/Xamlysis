@@ -386,6 +386,14 @@ def exam_result(request, attempt_id):
     for index, q in enumerate(questions, start=1):
         answer = saved.get(q.ques_id)
         selected = answer.selected_option if answer else None
+        # Correctness comes from what was stored when the attempt was scored,
+        # not from re-reading the question now. Editing a question later must
+        # not silently change a past result, and the stored verdict is what the
+        # recorded score was built from.
+        if answer is not None and answer.is_correct is not None:
+            was_correct = answer.is_correct
+        else:
+            was_correct = False
         review.append({
             'number': index,
             'text': q.ques,
@@ -393,7 +401,8 @@ def exam_result(request, attempt_id):
             'options': q.options(),
             'selected': selected,
             'correct': q.correct,
-            'is_correct': selected == q.correct,
+            'is_correct': was_correct,
+            'key_changed': selected is not None and was_correct != (selected == q.correct),
             'answered': selected is not None,
             'explanation': q.explanation,
         })
@@ -424,4 +433,110 @@ def exam_history(request):
         'total': len(submitted),
         'passed': len([a for a in submitted if a.passed]),
         'best_by_exam': best,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Student dashboard
+# ---------------------------------------------------------------------------
+
+@login_required
+def student_dashboard(request):
+    """One page covering what to sit next and how past sittings went.
+
+    Deliberately built from a fixed number of queries rather than looping over
+    exams and querying per row: attempts and exams are each fetched once with
+    their related course, and everything else is derived in Python. The query
+    count therefore does not grow with the number of exams or attempts, which
+    is asserted in the tests.
+    """
+    today = timezone.localdate()
+    my_classes = _student_classes(request.user)
+    my_courses = _availed_courses(request.user)
+
+    # 1 query: every attempt this student has, with the exam and course joined.
+    attempts = list(
+        ExamAttempt.objects.filter(student_id=request.user.email_id)
+        .select_related('exam', 'exam__course_id')
+    )
+
+    in_progress = []
+    submitted = []
+    for attempt in attempts:
+        if attempt.status == ExamAttempt.IN_PROGRESS:
+            # Surface a stale attempt as expired rather than silently resumable.
+            if timezone.now() >= attempt.expires_at:
+                attempt.display_status = 'Expired'
+                attempt.resumable = False
+            else:
+                attempt.display_status = 'In progress'
+                attempt.resumable = True
+            in_progress.append(attempt)
+        else:
+            attempt.display_status = 'Submitted'
+            attempt.resumable = False
+            submitted.append(attempt)
+
+    attempts_by_exam = {}
+    for attempt in attempts:
+        attempts_by_exam.setdefault(attempt.exam_id, []).append(attempt)
+
+    # 1 query: published exams with their course.
+    exams = list(
+        exam_details.objects.filter(is_published=True)
+        .select_related('course_id')
+        .order_by('date', 'start_time', 'exam_title')
+    )
+
+    available = []
+    upcoming = []
+    for exam in exams:
+        used = len(attempts_by_exam.get(exam.exam_code, []))
+        open_attempt = next(
+            (a for a in attempts_by_exam.get(exam.exam_code, [])
+             if a.status == ExamAttempt.IN_PROGRESS and timezone.now() < a.expires_at),
+            None,
+        )
+        limit = exam.max_attempts
+        row = {
+            'exam': exam,
+            'is_practice': exam.exam_type == exam_details.PRACTICE,
+            'attempts_used': used,
+            'attempts_left': None if not limit else max(0, limit - used),
+            'unlimited': not limit,
+            'can_start': (not limit) or used < limit,
+            'open_attempt': open_attempt,
+            'relevant': exam.class_stu in my_classes or exam.course_id_id in my_courses,
+        }
+        if exam.date > today:
+            upcoming.append(row)
+        else:
+            available.append(row)
+
+    # Students see their own class first, then everything else.
+    available.sort(key=lambda r: (not r['relevant'], r['exam'].exam_title))
+    upcoming.sort(key=lambda r: (r['exam'].date, r['exam'].exam_title))
+
+    submitted.sort(key=lambda a: a.submitted_at or a.started_at, reverse=True)
+    passed = [a for a in submitted if a.passed]
+    average = 0
+    if submitted:
+        average = round(sum(float(a.percentage) for a in submitted) / len(submitted), 1)
+    best = max((float(a.percentage) for a in submitted), default=0)
+
+    return render(request, 'student_dashboard.html', {
+        'in_progress': in_progress,
+        'available': available[:12],
+        'available_total': len(available),
+        'upcoming': upcoming[:6],
+        'upcoming_total': len(upcoming),
+        'recent_results': submitted[:6],
+        'stats': {
+            'attempted': len(submitted),
+            'passed': len(passed),
+            'average': average,
+            'best': best,
+            'in_progress': len([a for a in in_progress if a.resumable]),
+        },
+        'my_classes': sorted(my_classes),
     })

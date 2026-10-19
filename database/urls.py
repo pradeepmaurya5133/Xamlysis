@@ -60,6 +60,7 @@ urlpatterns = [
 
     # Exam engine. The legacy /test/ route above now redirects into this flow,
     # so there is one way to sit an exam rather than two.
+    path('dashboard/', exam_views.student_dashboard, name='student_dashboard'),
     path('exams/', exam_views.exam_catalogue, name='exam_catalogue'),
     path('exams/history/', exam_views.exam_history, name='exam_history'),
     path('exams/<str:exam_code>/start/', exam_views.start_attempt, name='exam_start'),
