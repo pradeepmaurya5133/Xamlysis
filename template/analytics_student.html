@@ -1,0 +1,101 @@
+{% extends 'base1.html' %}
+{% block title %}Analytics - {{ student.email_id }}{% endblock title %}
+{% block body %}
+<section class="page-shell container">
+  <header class="mb-4 d-flex flex-wrap justify-content-between align-items-end" style="gap:1rem">
+    <div>
+      <h1 class="section-title mb-1">{{ student.first_name }} {{ student.last_name }}</h1>
+      <p class="text-muted mb-0">{{ student.email_id }}</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{% url 'analytics_overview' %}">All analytics</a>
+  </header>
+
+  <div class="an-grid mb-4">
+    <div class="an-card"><span class="n">{{ summary.submitted }}</span><span class="l">Exams completed</span></div>
+    <div class="an-card"><span class="n">{{ summary.passed }}</span><span class="l">Passed</span></div>
+    <div class="an-card"><span class="n">{{ summary.pass_rate }}%</span><span class="l">Pass rate</span></div>
+    <div class="an-card"><span class="n">{{ summary.average }}%</span><span class="l">Average</span></div>
+    <div class="an-card"><span class="n">{{ summary.best }}%</span><span class="l">Best</span></div>
+    <div class="an-card"><span class="n">{{ summary.accuracy }}%</span><span class="l">Answer accuracy</span></div>
+    <div class="an-card"><span class="n">{{ summary.answered }}</span><span class="l">Questions answered</span></div>
+    <div class="an-card"><span class="n">{{ summary.skipped }}</span><span class="l">Skipped</span></div>
+  </div>
+
+  {% if progress %}
+  <article class="action-card mb-4">
+    <h2 class="h5 mb-3">Progress over time</h2>
+    <div class="progress-chart">
+      {% for p in progress %}
+      <div class="progress-bar-item" title="{{ p.label }}: {{ p.percentage }}%">
+        {% if p.passed %}
+        <div class="bar pass" style="height:{{ p.percentage }}%"></div>
+        {% else %}
+        <div class="bar fail" style="height:{{ p.percentage }}%"></div>
+        {% endif %}
+        <span class="pct">{{ p.percentage }}%</span>
+      </div>
+      {% endfor %}
+    </div>
+    <p class="text-muted small mt-2 mb-0">Submitted attempts in order, oldest first.</p>
+  </article>
+  {% endif %}
+
+  <article class="action-card mb-4">
+    <h2 class="h5 mb-3">Attempts</h2>
+    <div class="table-responsive">
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th>Exam</th><th>Course</th><th>Status</th>
+            <th class="text-right">Score</th><th class="text-right">%</th>
+            <th>Result</th><th>When</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in attempts %}
+          <tr>
+            <td>{{ a.exam.exam_title }}<div class="text-muted small">attempt {{ a.attempt_no }}</div></td>
+            <td class="small">{{ a.exam.course_id.course_name }}</td>
+            <td><span class="status-pill">{{ a.get_status_display }}</span></td>
+            <td class="text-right">{% if a.status == 'submitted' %}{{ a.score }}/{{ a.max_marks }}{% else %}&mdash;{% endif %}</td>
+            <td class="text-right">{% if a.status == 'submitted' %}{{ a.percentage }}%{% else %}&mdash;{% endif %}</td>
+            <td>
+              {% if a.status != 'submitted' %}&mdash;
+              {% elif a.passed %}<span style="color:#16a34a;font-weight:700">Passed</span>
+              {% else %}<span style="color:#b91c1c;font-weight:700">Not passed</span>{% endif %}
+            </td>
+            <td class="small">{{ a.submitted_at|default:a.started_at|date:"d M Y, H:i" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="text-muted">This student has not attempted an exam yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </article>
+
+  {% if legacy %}
+  <article class="action-card">
+    <h2 class="h5 mb-1">Historical results</h2>
+    <p class="text-muted small mb-3">
+      Recorded before attempt tracking. These have a score but no per-question
+      detail, so they are not included in the accuracy figures above.
+    </p>
+    <div class="table-responsive">
+      <table class="table mb-0">
+        <thead><tr><th>Exam</th><th class="text-right">Marks</th><th class="text-right">Percentage</th></tr></thead>
+        <tbody>
+          {% for s in legacy %}
+          <tr>
+            <td>{{ s.exam_code.exam_title }}<div class="text-muted small">{{ s.exam_code_id }}</div></td>
+            <td class="text-right">{{ s.scored_marks }}</td>
+            <td class="text-right">{{ s.percentage }}%</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </article>
+  {% endif %}
+</section>
+{% endblock body %}

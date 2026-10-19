@@ -1,0 +1,125 @@
+{% extends 'base1.html' %}
+{% block title %}Analytics{% endblock title %}
+
+{% block body %}
+<section class="page-shell container">
+  <header class="mb-4">
+    <h1 class="section-title mb-1">Analytics</h1>
+    <p class="text-muted mb-0">
+      Averages and pass rates count submitted attempts only; attempts still in
+      progress have no score yet.
+    </p>
+  </header>
+
+  <div class="an-grid mb-4">
+    <div class="an-card"><span class="n">{{ headline.started }}</span><span class="l">Attempts started</span></div>
+    <div class="an-card"><span class="n">{{ headline.submitted }}</span><span class="l">Submitted</span></div>
+    <div class="an-card"><span class="n">{{ headline.completion_rate }}%</span><span class="l">Completion rate</span></div>
+    <div class="an-card"><span class="n">{{ headline.average }}%</span><span class="l">Average score</span></div>
+    <div class="an-card"><span class="n">{{ headline.pass_rate }}%</span><span class="l">Pass rate</span></div>
+    <div class="an-card"><span class="n">{{ headline.students }}</span><span class="l">Students</span></div>
+    <div class="an-card"><span class="n">{{ headline.accuracy }}%</span><span class="l">Answer accuracy</span></div>
+    <div class="an-card"><span class="n">{{ headline.in_progress }}</span><span class="l">In progress</span></div>
+  </div>
+
+  {% if headline.started == 0 %}
+  <article class="action-card mb-4">
+    <h2 class="h5 mb-2">No attempts recorded yet</h2>
+    <p class="mb-0 text-muted">
+      These figures fill in once students sit exams.
+      {% if headline.legacy_results %}
+      There {{ headline.legacy_results|pluralize:"is,are" }}
+      <strong>{{ headline.legacy_results }}</strong> historical result{{ headline.legacy_results|pluralize }}
+      from before attempt tracking existed. Those carry a score but no
+      per-question detail, so they are excluded from accuracy above.
+      {% endif %}
+    </p>
+  </article>
+  {% elif headline.legacy_results %}
+  <p class="text-muted small mb-4">
+    Excludes {{ headline.legacy_results }} historical result{{ headline.legacy_results|pluralize }}
+    recorded before attempt tracking, which have no per-question detail.
+  </p>
+  {% endif %}
+
+  <article class="action-card mb-4">
+    <h2 class="h5 mb-3">Course performance</h2>
+    <div class="table-responsive">
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th>Course</th><th>Class</th>
+            <th class="text-right">Exams</th>
+            <th class="text-right">Submitted</th>
+            <th class="text-right">Average</th>
+            <th class="text-right">Pass rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td>{{ r.course.course_name }}<div class="text-muted small">{{ r.course.course_id }}</div></td>
+            <td>{{ r.course.class_stu_tech }}</td>
+            <td class="text-right">{{ r.exam_count }}</td>
+            <td class="text-right">{{ r.attempts }}</td>
+            <td class="text-right">{% if r.attempts %}{{ r.average }}%{% else %}&mdash;{% endif %}</td>
+            <td class="text-right">{% if r.attempts %}{{ r.pass_rate }}%{% else %}&mdash;{% endif %}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-muted">No courses found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if page.has_other_pages %}
+    <nav class="mt-3 d-flex justify-content-between align-items-center">
+      <span class="text-muted small">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+      <span>
+        {% if page.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?page={{ page.previous_page_number }}">Previous</a>{% endif %}
+        {% if page.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?page={{ page.next_page_number }}">Next</a>{% endif %}
+      </span>
+    </nav>
+    {% endif %}
+  </article>
+
+  {% if topic_rows %}
+  <article class="action-card mb-4">
+    <h2 class="h5 mb-3">Topic accuracy</h2>
+    <div class="table-responsive">
+      <table class="table mb-0">
+        <thead><tr><th>Topic</th><th class="text-right">Answered</th><th class="text-right">Correct</th><th class="text-right">Accuracy</th></tr></thead>
+        <tbody>
+          {% for t in topic_rows %}
+          <tr>
+            <td>{{ t.topic }}</td>
+            <td class="text-right">{{ t.answered }}</td>
+            <td class="text-right">{{ t.correct }}</td>
+            <td class="text-right">{{ t.accuracy }}%</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="text-muted small mt-2 mb-0">Only questions with a topic set are counted.</p>
+  </article>
+  {% endif %}
+
+  <article class="action-card">
+    <h2 class="h5 mb-3">Most attempted exams</h2>
+    {% for e in exams %}
+    <div class="dash-row">
+      <div>
+        <strong>{{ e.exam_title }}</strong>
+        <div class="text-muted small">{{ e.exam_code }} &middot; class {{ e.class_stu }}</div>
+      </div>
+      <div class="dash-actions">
+        <span class="text-muted small">{{ e.attempt_count }} submitted</span>
+        <a class="btn btn-sm btn-outline-secondary" href="{% url 'analytics_exam' e.exam_code %}">Breakdown</a>
+      </div>
+    </div>
+    {% empty %}
+    <p class="text-muted mb-0">No exam has been submitted yet.</p>
+    {% endfor %}
+  </article>
+</section>
+{% endblock body %}
