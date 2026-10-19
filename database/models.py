@@ -135,6 +135,26 @@ class ques_table(models.Model):
         help_text='Shown to the student with their result. Optional.',
     )
 
+    # Question-bank classification. Both are optional with defaults, so the
+    # existing rows take the default without a backfill, and neither takes any
+    # part in scoring: changing them cannot alter a past attempt.
+    EASY = 'easy'
+    MEDIUM = 'medium'
+    HARD = 'hard'
+    DIFFICULTY_CHOICES = [
+        (EASY, 'Easy'),
+        (MEDIUM, 'Medium'),
+        (HARD, 'Hard'),
+    ]
+    difficulty = models.CharField(
+        max_length=10, choices=DIFFICULTY_CHOICES, default=MEDIUM, db_index=True,
+        help_text='Used for filtering the question bank only.',
+    )
+    topic = models.CharField(
+        max_length=120, blank=True, default='', db_index=True,
+        help_text='Chapter or topic within the course. Optional, free text.',
+    )
+
     def options(self):
         """The four options in order, so templates do not repeat themselves."""
         return [self.option1, self.option2, self.option3, self.option4]

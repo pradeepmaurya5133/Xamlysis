@@ -1,0 +1,39 @@
+{% extends 'base1.html' %}
+{% block title %}{% if mode == 'create' %}New question{% else %}Edit question{% endif %}{% endblock title %}
+{% block body %}
+<section class="page-shell container" style="max-width:820px">
+  <h1 class="section-title mb-4">
+    {% if mode == 'create' %}New question{% else %}Edit {{ question.ques_id }}{% endif %}
+  </h1>
+
+  {% if used_in %}
+  <div class="alert alert-info">
+    This question has been answered in <strong>{{ used_in }}</strong> scored attempt{{ used_in|pluralize }}.
+    Editing it will not change any recorded score: results are stored when an attempt is
+    marked. Students reviewing an older attempt will, however, see the edited wording.
+  </div>
+  {% endif %}
+
+  {% if form.errors %}
+  <div class="alert alert-info">Please correct the errors highlighted below.</div>
+  {% endif %}
+
+  <form method="post" class="action-card">
+    {% csrf_token %}
+    {% for field in form %}
+    <div class="form-group mb-3">
+      <label for="{{ field.id_for_label }}"><strong>{{ field.label }}</strong></label>
+      {{ field }}
+      {% if field.help_text %}<small class="form-text text-muted">{{ field.help_text }}</small>{% endif %}
+      {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+    {% endfor %}
+    {% for error in form.non_field_errors %}<div class="text-danger small mb-2">{{ error }}</div>{% endfor %}
+
+    <button class="btn btn-primary" type="submit">
+      {% if mode == 'create' %}Create question{% else %}Save changes{% endif %}
+    </button>
+    <a class="btn btn-outline-secondary" href="{% url 'question_bank' %}">Cancel</a>
+  </form>
+</section>
+{% endblock body %}

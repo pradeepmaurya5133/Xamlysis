@@ -1180,3 +1180,16 @@ button[type="submit"]:hover {
 @media (max-width: 380px) {
   .dash-stats { grid-template-columns: 1fr; }
 }
+
+/* Question bank */
+.qb-filters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; align-items: end; }
+.qb-filters label { display: flex; flex-direction: column; gap: .3rem; margin: 0; }
+.qb-filters label span { font-size: .76rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #64748b; }
+.qb-filter-actions { display: flex; gap: .5rem; }
+.badge-easy { background: #dcfce7; color: #166534; }
+.badge-medium { background: #fef3c7; color: #92400e; }
+.badge-hard { background: #fee2e2; color: #991b1b; }
+.opt-preview { padding: .7rem .9rem; margin-bottom: .5rem; border: 1px solid #e3e8ef; border-radius: 8px; }
+.opt-letter { display: inline-flex; align-items: center; justify-content: center; width: 1.6rem; height: 1.6rem; margin-right: .6rem; border-radius: 50%; background: #eef2f7; font-weight: 700; font-size: .8rem; }
+@media (max-width: 860px) { .qb-filters { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .qb-filters { grid-template-columns: 1fr; } }

@@ -1,0 +1,57 @@
+{% extends 'base1.html' %}
+{% block title %}{{ question.ques_id }}{% endblock title %}
+{% block body %}
+<section class="page-shell container">
+  <header class="mb-4 d-flex flex-wrap justify-content-between align-items-end" style="gap:1rem">
+    <div>
+      <h1 class="section-title mb-1">Question preview</h1>
+      <p class="text-muted mb-0">
+        {{ question.ques_id }} &middot; {{ question.exam_code.exam_code }} &middot;
+        {{ question.exam_code.course_id.course_name }} &middot; class {{ question.exam_code.class_stu }}
+      </p>
+    </div>
+    <span>
+      <a class="btn btn-outline-primary" href="{% url 'question_edit' question.ques_id %}">Edit</a>
+      <a class="btn btn-outline-secondary" href="{% url 'question_bank' %}">Back to bank</a>
+    </span>
+  </header>
+
+  <article class="action-card mb-4">
+    <p class="text-muted small mb-3">As a student sees it</p>
+    <p style="font-size:1.08rem;line-height:1.6"><strong>{{ question.ques }}</strong></p>
+    {% for n, text in options %}
+    <div class="opt-preview">
+      <span class="opt-letter">{{ n }}</span> {{ text }}
+    </div>
+    {% endfor %}
+    <p class="text-muted small mt-3 mb-0">{{ question.marks }} marks</p>
+  </article>
+
+  <article class="action-card mb-4">
+    <p class="text-muted small mb-3">Staff only</p>
+    <p class="mb-2">
+      <strong>Correct answer:</strong> Option {{ question.correct }} &mdash;
+      {% for n, text in options %}{% if n == question.correct %}{{ text }}{% endif %}{% endfor %}
+    </p>
+    <p class="mb-2">
+      <strong>Difficulty:</strong>
+      <span class="badge-type badge-{{ question.difficulty }}">{{ question.get_difficulty_display }}</span>
+      &nbsp;<strong>Topic:</strong> {{ question.topic|default:"not set" }}
+    </p>
+    <p class="mb-0"><strong>Explanation:</strong> {{ question.explanation|default:"none recorded" }}</p>
+  </article>
+
+  <article class="action-card">
+    <p class="text-muted small mb-3">How students have answered it</p>
+    {% if stats.total %}
+    <p class="mb-0">
+      Answered {{ stats.total }} time{{ stats.total|pluralize }} &middot;
+      <span style="color:#16a34a">{{ stats.correct }} correct</span> &middot;
+      <span style="color:#b91c1c">{{ stats.wrong }} incorrect</span>
+    </p>
+    {% else %}
+    <p class="mb-0 text-muted">No student has answered this question yet.</p>
+    {% endif %}
+  </article>
+</section>
+{% endblock body %}
