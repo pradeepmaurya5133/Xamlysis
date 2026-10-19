@@ -4,17 +4,61 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
 
+from django.contrib.auth.forms import UserCreationForm
+
 from .forms import MyUserCreationForm, MyUserChangeForm
 
 
+class AdminUserCreationForm(UserCreationForm):
+    """Create a user from the admin, including the fields the model needs.
+
+    Django's stock UserAdmin add form only collects username and a password.
+    This model's primary key is email_id, which that form never asks for, so
+    saving produced a row with an empty primary key and the redirect afterwards
+    failed with NoReverseMatch. Asking for email_id here is what makes creating
+    a teacher account possible at all.
+
+    Unlike the public sign-up form, this one does expose role_id: the admin is
+    already trusted, and choosing the role is the entire point of creating a
+    teacher here.
+    """
+
+    class Meta:
+        model = User
+        fields = ('email_id', 'username', 'first_name', 'last_name',
+                  'mobile_no', 'role_id')
+
+
 class MyUserAdmin(UserAdmin):
-    add_form = MyUserCreationForm
-    form = MyUserChangeForm
+    add_form = AdminUserCreationForm
     model = User
-    list_display = ['email_id']
+    ordering = ['email_id']
+    list_display = ['email_id', 'username', 'first_name', 'last_name',
+                    'role_id', 'is_staff', 'is_superuser', 'is_active']
+    list_filter = ['role_id', 'is_staff', 'is_superuser', 'is_active']
+    search_fields = ['email_id', 'username', 'first_name', 'last_name']
+
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('email_id', 'username', 'first_name', 'last_name',
+                       'mobile_no', 'role_id', 'password1', 'password2'),
+        }),
+    )
+    fieldsets = (
+        (None, {'fields': ('email_id', 'password')}),
+        ('Personal', {'fields': ('username', 'first_name', 'last_name', 'mobile_no')}),
+        ('Role and permissions', {
+            'fields': ('role_id', 'is_active', 'is_staff', 'is_superuser',
+                       'groups', 'user_permissions'),
+            'description': 'role_id 1 is TEACHER and grants the exam staff '
+                           'pages; role_id 2 is STUDENT.',
+        }),
+        ('Dates', {'fields': ('last_login', 'date_joined')}),
+    )
 
 
-admin.site.register(User, UserAdmin)
+admin.site.register(User, MyUserAdmin)
 
 
 # ---------------------------------------------------------------------------

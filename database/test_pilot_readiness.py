@@ -183,3 +183,60 @@ class UnauthorizedUrlTests(ExamEngineTestCase):
             self.client.get(
                 reverse('exam_start', args=[self.exam.exam_code])).status_code, 404)
         self.assertFalse(ExamAttempt.objects.filter(exam=self.exam).exists())
+
+
+class AdminUserCreationTests(ExamEngineTestCase):
+    """Creating a teacher from the admin is how pilot teachers are onboarded.
+
+    Django's stock UserAdmin add form collects only username and a password.
+    This model's primary key is email_id, which that form never asks for, so
+    the row saved with an empty primary key and the admin then raised
+    NoReverseMatch, returning 500.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.admin = User.objects.create(
+            email_id='siteadmin@test.local', username='siteadminx',
+            role_id_id=1, is_staff=True, is_superuser=True)
+        self.admin.set_password(PASSWORD)
+        self.admin.save()
+        self.client.login(email_id=self.admin.email_id, password=PASSWORD)
+
+    def test_the_add_form_asks_for_the_primary_key(self):
+        response = self.client.get('/admin/database/user/add/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'email_id')
+        self.assertContains(response, 'role_id')
+
+    def test_a_teacher_can_be_created_and_reaches_the_staff_pages(self):
+        before = User.objects.count()
+        response = self.client.post('/admin/database/user/add/', {
+            'email_id': 'pilotteacher@test.local', 'username': 'pilotteachx',
+            'first_name': 'Pilot', 'last_name': 'Teacher',
+            'mobile_no': '9000000014', 'role_id': '1',
+            'password1': 'Kanchipuram#9920', 'password2': 'Kanchipuram#9920',
+            'usable_password': 'true', '_save': 'Save',
+        })
+        self.assertEqual(response.status_code, 302, 'a 500 here means the add form is broken')
+        self.assertEqual(User.objects.count(), before + 1)
+
+        created = User.objects.get(email_id='pilotteacher@test.local')
+        self.assertEqual(created.role_id_id, 1)
+
+        teacher = Client()
+        self.assertTrue(
+            teacher.login(email_id=created.email_id, password='Kanchipuram#9920'))
+        for url in ('/staff/questions/', '/staff/analytics/', '/exam_detail'):
+            with self.subTest(url=url):
+                self.assertEqual(teacher.get(url).status_code, 200, url)
+
+    def test_creating_a_user_never_leaves_a_blank_primary_key(self):
+        self.client.post('/admin/database/user/add/', {
+            'username': 'nopk', 'password1': 'Kanchipuram#9920',
+            'password2': 'Kanchipuram#9920', 'usable_password': 'true',
+            '_save': 'Save',
+        })
+        self.assertEqual(
+            User.objects.filter(email_id='').count(), 0,
+            'a submission without an email must be rejected, not saved blank')
