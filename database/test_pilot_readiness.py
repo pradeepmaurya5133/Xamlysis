@@ -240,3 +240,96 @@ class AdminUserCreationTests(ExamEngineTestCase):
         self.assertEqual(
             User.objects.filter(email_id='').count(), 0,
             'a submission without an email must be rejected, not saved blank')
+
+
+class ExamScheduleEnforcementTests(ExamEngineTestCase):
+    """The exam date gates starting, not just what the dashboard lists.
+
+    Found on production during the pilot: both pilot students completed fully
+    scored attempts on an exam dated sixteen days out, by opening its start URL
+    directly. The dashboard had filed it under "Upcoming" and never offered it.
+    """
+
+    def start(self):
+        return self.client.get(reverse('exam_start', args=[self.exam.exam_code]))
+
+    def test_future_dated_exam_cannot_be_started(self):
+        self.exam.date = timezone.localdate() + datetime.timedelta(days=16)
+        self.exam.save(update_fields=['date'])
+        self.login_student()
+
+        response = self.start()
+
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'cannot be started before then', status_code=403)
+        self.assertEqual(
+            ExamAttempt.objects.filter(exam=self.exam).count(), 0,
+            'refusing to start must not leave an attempt behind')
+
+    def test_refusal_does_not_consume_an_attempt(self):
+        self.exam.date = timezone.localdate() + datetime.timedelta(days=1)
+        self.exam.save(update_fields=['date'])
+        self.login_student()
+
+        for _ in range(3):
+            self.assertEqual(self.start().status_code, 403)
+
+        # max_attempts is 2 in the fixture: a student locked out early must
+        # still have both attempts once the exam opens.
+        self.exam.date = timezone.localdate()
+        self.exam.save(update_fields=['date'])
+        self.assertEqual(self.start().status_code, 302)
+        self.assertEqual(ExamAttempt.objects.filter(exam=self.exam).count(), 1)
+
+    def test_exam_dated_today_can_be_started(self):
+        self.exam.date = timezone.localdate()
+        self.exam.save(update_fields=['date'])
+        self.login_student()
+
+        self.assertEqual(self.start().status_code, 302)
+        self.assertEqual(ExamAttempt.objects.filter(exam=self.exam).count(), 1)
+
+    def test_past_dated_exam_can_still_be_started(self):
+        """Only the future is refused; a past paper stays open as before."""
+        self.exam.date = timezone.localdate() - datetime.timedelta(days=30)
+        self.exam.save(update_fields=['date'])
+        self.login_student()
+
+        self.assertEqual(self.start().status_code, 302)
+        self.assertEqual(ExamAttempt.objects.filter(exam=self.exam).count(), 1)
+
+    def test_start_time_later_today_does_not_block(self):
+        """The gate is date-only, matching what the dashboard offers.
+
+        The dashboard lists an exam as available from midnight on its date, so
+        refusing before start_time would fail a click on a card that says the
+        exam is available.
+        """
+        self.exam.date = timezone.localdate()
+        self.exam.start_time = datetime.time(23, 59)
+        self.exam.save(update_fields=['date', 'start_time'])
+        self.login_student()
+
+        self.assertEqual(self.start().status_code, 302)
+
+    def test_open_attempt_survives_the_exam_being_moved_later(self):
+        """A student mid-exam is not stranded if the date moves out."""
+        attempt = self.start_attempt()
+        self.exam.date = timezone.localdate() + datetime.timedelta(days=7)
+        self.exam.save(update_fields=['date'])
+
+        response = self.start()
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('exam_take', args=[attempt.pk]))
+
+    def test_dashboard_and_start_agree(self):
+        """Anything listed under "Available now" must actually start."""
+        self.exam.date = timezone.localdate()
+        self.exam.save(update_fields=['date'])
+        self.login_student()
+
+        available = self.client.get('/dashboard/').context['available']
+        codes = [row['exam'].exam_code for row in available]
+        self.assertIn(self.exam.exam_code, codes)
+        self.assertEqual(self.start().status_code, 302)

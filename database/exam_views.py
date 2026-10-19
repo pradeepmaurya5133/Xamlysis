@@ -249,6 +249,28 @@ def start_attempt(request, exam_code):
             return redirect('exam_take', attempt_id=open_attempt.pk)
         return redirect('exam_result', attempt_id=open_attempt.pk)
 
+    # The schedule is a real gate, not only a dashboard filter. Without this a
+    # student who knows an exam code could open /exams/<code>/start/ and sit the
+    # paper days before its sitting, and burn their attempts so the scheduled
+    # sitting is then refused. Codes are guessable: the seed names them
+    # <COURSE>-EXAM.
+    #
+    # The comparison matches student_dashboard exactly, date only against
+    # timezone.localdate(), so an exam the dashboard offers under "Available
+    # now" can always be started. start_time is deliberately not enforced:
+    # the dashboard makes an exam available from midnight on its date, and
+    # refusing before start_time would fail clicks on a card that says the
+    # exam is available.
+    #
+    # Resuming an already-open attempt is handled above and stays allowed, so
+    # a student mid-exam is never stranded by this check.
+    if exam.date > timezone.localdate():
+        return render(request, 'exam_blocked.html', {
+            'exam': exam,
+            'reason': 'This exam opens on %s and cannot be started before then.'
+                      % exam.date.strftime('%d %b %Y'),
+        }, status=403)
+
     used = ExamAttempt.objects.filter(exam=exam, student_id=request.user.email_id).count()
     if exam.max_attempts and used >= exam.max_attempts:
         return render(request, 'exam_blocked.html', {
